@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DD Jang — VIP Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #d4af37;
+      --primary-glow: rgba(212, 175, 55, 0.5);
+      --bg-dark: #1a0505;
+      --bg-light: #3a0606;
+      --glass-bg: rgba(20, 5, 5, 0.6);
+      --glass-border: rgba(212, 175, 55, 0.15);
+    }
+
+    body { transition: background-color 1s ease; }
+
+    /* Burst effect sparks */
+    .spark {
+      position: absolute; width: 4px; height: 4px; background: var(--primary);
+      border-radius: 50%; box-shadow: 0 0 10px var(--primary);
+      pointer-events: none; z-index: 10;
+      animation: explode 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+    }
+    @keyframes explode {
+      0% { opacity: 1; transform: scale(1) translate(0, 0); }
+      100% { opacity: 0; transform: scale(0) translate(var(--tx), var(--ty)); }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background-color: var(--bg-dark);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+      color-scheme: dark;
+    }
+
+    /* Animated Background */
+    .bg-animation {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: -1;
+      background: radial-gradient(circle at 50% 50%, var(--bg-light) 0%, var(--bg-dark) 80%);
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    
+    .astrolabe-wheel {
+      position: absolute; border-radius: 50%;
+      border: 1px dashed rgba(212, 175, 55, 0.2);
+    }
+    .wheel-1 { width: 140vw; height: 140vw; border: 2px dotted rgba(212, 175, 55, 0.15); animation: spinWheel 120s linear infinite; }
+    .wheel-2 { width: 100vw; height: 100vw; background: repeating-conic-gradient(from 0deg, transparent 0deg, rgba(212,175,55,0.05) 15deg, transparent 30deg); animation: spinWheelReverse 90s linear infinite; box-shadow: inset 0 0 50px rgba(212,175,55,0.1); }
+    .wheel-3 { width: 60vw; height: 60vw; border: 2px solid rgba(212, 175, 55, 0.2); animation: spinWheel 60s linear infinite; }
+    
+    @keyframes spinWheel { to { transform: rotate(360deg); } }
+    @keyframes spinWheelReverse { to { transform: rotate(-360deg); } }
+
+    .orb { position: absolute; border-radius: 50%; filter: blur(80px); animation: float 20s infinite alternate ease-in-out; opacity: 0.4; display: none; }
+    .orb-1 { width: 400px; height: 400px; top: -100px; left: -100px; animation-delay: 0s; }
+    .orb-2 { width: 300px; height: 300px; bottom: 0; right: -50px; animation-delay: -5s; }
+    .orb-3 { width: 250px; height: 250px; top: 40%; left: 50%; animation-delay: -10s; opacity: 0.2; }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(30px, 50px) scale(1.1); }
+      100% { transform: translate(-20px, -30px) scale(0.9); }
+    }
+
+    /* Container */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      animation: fadeDown 0.8s ease forwards;
+    }
+    .header .logo { font-size: 3rem; margin-bottom: 10px; display: inline-block; animation: pulseGlow 2s infinite alternate; }
+    .header h1 { font-size: 1.8rem; color: var(--primary); font-weight: 700; letter-spacing: 1px; text-shadow: 0 0 20px var(--primary-glow); }
+    .header p { font-size: 0.95rem; color: #c8b9e8; margin-top: 8px; font-weight: 300; }
+
+    /* ========================================= */
+    /* UI ฟีเจอร์สายตรงหมอดู (Premium Voice Chat) */
+    /* ========================================= */
+    .premium-voice-card {
+      background: linear-gradient(145deg, rgba(45, 27, 105, 0.7), rgba(26, 10, 62, 0.9));
+      border: 1px solid var(--primary);
+      border-radius: 24px;
+      padding: 30px;
+      margin-bottom: 40px; 
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 0 20px rgba(212, 175, 55, 0.15);
+      position: relative;
+      overflow: hidden;
+      animation: borderGlow 4s infinite alternate;
+    }
+
+    @keyframes borderGlow {
+      0% { box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 10px rgba(212, 175, 55, 0.2), inset 0 0 20px rgba(212, 175, 55, 0.15); }
+      100% { box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 25px rgba(212, 175, 55, 0.6), inset 0 0 30px rgba(212, 175, 55, 0.3); }
+    }
+
+    .live-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 0, 0, 0.15);
+      border: 1px solid #ff4444;
+      color: #ff4444;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .live-dot {
+      width: 8px; height: 8px;
+      background-color: #ff4444;
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+    .voice-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* ========================================= */
+    /* เอฟเฟกต์ลูกแก้ว และวงแหวนดาวเสาร์ 3 มิติ         */
+    /* ========================================= */
+    .voice-avatar {
+      font-size: 3.5rem;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, transparent 70%);
+      width: 80px; height: 80px;
+      display: flex; justify-content: center; align-items: center;
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .voice-avatar::before {
+      content: '';
+      position: absolute;
+      width: 150%;  
+      height: 150%;
+      border-radius: 50%;
+      border: 2px dashed var(--primary);
+      animation: spinSaturn 15s linear infinite;
+      z-index: 1;
+    }
+
+    .voice-avatar span { 
+      position: relative;
+      z-index: 2;
+      animation: floatCrystal 3s ease-in-out infinite alternate;
+    }
+
+    /* (เก็บไว้เหมือนเดิม) สไตล์ของตัวหนังสือหัวข้อ */
+    .voice-title h2 { color: #FFD700; font-size: 1.4rem; margin-bottom: 5px; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
+    .voice-title p { color: #c8b9e8; font-size: 0.85rem; font-weight: 300; }
+
+    /* แอนิเมชันหมุนวงแหวนและลูกแก้วลอย */
+    @keyframes spinSaturn {
+      0% { transform: rotateX(65deg) rotateY(-15deg) rotateZ(0deg); }
+      100% { transform: rotateX(65deg) rotateY(-15deg) rotateZ(360deg); }
+    }
+
+    @keyframes floatCrystal {
+      from { 
+        transform: translateY(-4px); 
+        filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4)); 
+      }
+      to { 
+        transform: translateY(4px); 
+        filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.9)); 
+      }
+    }
+
+    .voice-title h2 { color: #FFD700; font-size: 1.4rem; margin-bottom: 5px; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
+    .voice-title p { color: #c8b9e8; font-size: 0.85rem; font-weight: 300; }
+
+    /* ========================================= */
+    /* ส่วนควบคุมการขยาย/หด Voice Chat             */
+    /* ========================================= */
+    .voice-chat-content {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+    }
+
+    .voice-chat-content.expanded {
+      max-height: 500px;
+      opacity: 1;
+      margin-top: 20px;
+      border-top: 1px dashed rgba(212, 175, 55, 0.3);
+      padding-top: 20px;
+    }
+
+    #expand-voice-btn {
+      width: 100%;
+      background: rgba(255, 215, 0, 0.1);
+      color: #ffd700;
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    #expand-voice-btn:hover {
+      background: rgba(255, 215, 0, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .premium-chat-box {
+      height: 200px;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.5);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.05);
+      scroll-behavior: smooth;
+    }
+
+    .chat-bubble { margin-bottom: 12px; line-height: 1.6; font-size: 0.95rem; }
+    .bot-name { color: #FFD700; font-weight: 700; margin-right: 5px; }
+    .user-name { color: #a78bfa; font-weight: 700; margin-right: 5px; }
+
+    .mic-control-area { text-align: center; }
+    
+    #mic-btn {
+      background: linear-gradient(135deg, #FFD700, #f59e0b);
+      color: #451a03;
+      border: none;
+      padding: 16px 40px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 10px 20px rgba(245, 158, 11, 0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #mic-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 25px rgba(245, 158, 11, 0.6); }
+    #mic-btn.listening {
+      background: linear-gradient(135deg, #ff4d4d, #c0392b);
+      color: white;
+      animation: pulseRecord 1.5s infinite;
+    }
+    
+    @keyframes pulseRecord {
+      0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
+      70% { box-shadow: 0 0 0 15px rgba(255, 77, 77, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+    }
+
+    /* Service Selection */
+    .service-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .service-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+    }
+    
+    .service-card:nth-child(1) { animation: fadeUp 0.6s ease forwards 0.1s, cardFloat 6s infinite ease-in-out alternate 0s; }
+    .service-card:nth-child(2) { animation: fadeUp 0.6s ease forwards 0.2s, cardFloat 6s infinite ease-in-out alternate 1s; }
+    .service-card:nth-child(3) { animation: fadeUp 0.6s ease forwards 0.3s, cardFloat 6s infinite ease-in-out alternate 0.5s; }
+    .service-card:nth-child(4) { animation: fadeUp 0.6s ease forwards 0.4s, cardFloat 6s infinite ease-in-out alternate 1.5s; }
+    .service-card:nth-child(5) { animation: fadeUp 0.6s ease forwards 0.5s, cardFloat 6s infinite ease-in-out alternate 2s; }
+    .service-card:nth-child(6) { animation: fadeUp 0.6s ease forwards 0.6s, cardFloat 6s infinite ease-in-out alternate 2.5s; }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 50%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transform: skewX(-20deg);
+      transition: 0.5s;
+    }
+    
+    .service-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255, 215, 0, 0.4);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 215, 0, 0.2);
+    }
+    .service-card:hover::before { left: 150%; }
+
+    .service-card.active {
+      border-color: var(--primary);
+      background: rgba(212, 175, 55, 0.15);
+      box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.1);
+    }
+
+    .service-icon {
+      font-size: 2.5rem;
+      margin-right: 20px;
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
+    }
+    .service-info h3 { font-size: 1.1rem; color: #fff; margin-bottom: 4px; font-weight: 600; }
+    .service-info p { font-size: 0.8rem; color: #a78bfa; font-weight: 300; }
+
+    /* Action Form Section */
+    .action-section {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 24px;
+      padding: 30px 24px;
+      display: none;
+      animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      position: relative;
+    }
+
+    .action-section h2 {
+      font-size: 1.2rem;
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block; font-size: 0.9rem; color: #d8b4fe; margin-bottom: 8px; font-weight: 400;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 16px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 1.1rem;
+      outline: none;
+      transition: all 0.3s;
+      appearance: none;
+      -webkit-appearance: none;
+      min-height: 56px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+    }
+    .form-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) brightness(1.5); cursor: pointer; }
+    .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,215,0,0.2), inset 0 2px 5px rgba(0,0,0,0.5); }
+
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #ffd700, #f59e0b);
+      color: #451a03;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 16px;
+      border-radius: 16px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+    .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6); }
+    .submit-btn:active { transform: translateY(1px); }
+    .submit-btn:disabled { background: #555; color: #999; box-shadow: none; cursor: not-allowed; transform: none; }
+
+    /* Result Section */
+    .result-section { display: none; margin-top: 24px; animation: fadeUp 0.5s ease forwards; }
+    
+    .ai-reading {
+      background: rgba(0,0,0,0.3);
+      border-radius: 16px;
+      padding: 24px;
+      line-height: 1.7;
+      font-size: 1rem;
+      color: #f3f4f6;
+      white-space: pre-wrap;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* Astrology Specific Result */
+    .chart-container { margin-bottom: 20px; overflow-x: auto; background: rgba(0,0,0,0.4); border-radius: 16px; padding: 16px; border: 1px solid rgba(255,255,255,0.05); }
+    .numerology-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.95rem; }
+    .numerology-table th, .numerology-table td { padding: 10px 4px; border: 1px dashed rgba(255,255,255,0.1); }
+    .numerology-table th { color: #a78bfa; font-size: 0.8rem; font-weight: 400; }
+    .numerology-table td { color: var(--primary); font-weight: 700; }
+    .row-label { color: #d8b4fe !important; font-weight: 400 !important; font-size: 0.85rem; }
+    .base-4 { background: rgba(255,215,0,0.08); }
+
+    /* Loading Spinner */
+    .loading { text-align: center; padding: 40px 20px; display: none; }
+    .spinner {
+      width: 60px; height: 60px;
+      border: 4px solid rgba(255,215,0,0.1);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ========================================= */
+    /* CSS สำหรับ Popup Modal (Error) สวยๆ         */
+    /* ========================================= */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+    .modal-content {
+      background: linear-gradient(145deg, #2a0808, #1a0505);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 24px;
+      padding: 40px 30px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(212, 175, 55, 0.05);
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .modal-overlay.show .modal-content {
+      transform: scale(1);
+    }
+    .modal-icon {
+      font-size: 3.5rem;
+      margin-bottom: 15px;
+      animation: gentleShake 3s infinite ease-in-out;
+    }
+    .modal-title {
+      color: #ffd700;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .modal-desc {
+      color: #e2d3f5;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+    .modal-btn {
+      background: transparent;
+      color: #ffd700;
+      border: 1px solid #ffd700;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .modal-btn:hover {
+      background: rgba(255, 215, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    /* Animations */
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes pulseGlow { from { filter: drop-shadow(0 0 10px rgba(255,215,0,0.4)); } to { filter: drop-shadow(0 0 25px rgba(255,215,0,0.8)); } }
+    @keyframes gentleShake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+
+    /* Particles */
+    .particles {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none; z-index: 0;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      animation: rise linear infinite;
+      background: rgba(255, 215, 0, 0.6);
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+    }
+
+    @keyframes rise {
+      0% { transform: translateY(100vh) scale(0); opacity: 0; }
+      20% { opacity: 1; transform: translateY(80vh) scale(1) translateX(10px); }
+      80% { opacity: 1; transform: translateY(20vh) scale(1) translateX(-10px); }
+      100% { transform: translateY(-10vh) scale(0); opacity: 0; }
+    }
+
+    /* Floating elements */
+    @keyframes cardFloat {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-8px); }
+    }
+
+    /* ========================================= */
+    /* Personal Star — ดวงดาวประจำตัว              */
+    /* ========================================= */
+
+    /* Scene wrapper */
+    .star-scene {
+      perspective: 800px;
+      width: 220px;
+      height: 220px;
+      margin: 0 auto 30px;
+      position: relative;
+    }
+
+    /* ดาวกลาง */
+    .star-core {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+    }
+    .planet-canvas {
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      animation: starFloat 3.5s ease-in-out infinite alternate;
+      filter: drop-shadow(0 0 20px var(--orbit-color, rgba(212,175,55,0.9)));
+    }
+    @keyframes starFloat {
+      from { transform: translateY(-8px) scale(1); }
+      to   { transform: translateY(8px) scale(1.08); }
+    }
+    @keyframes starPulse {
+      from { filter: drop-shadow(0 0 15px var(--orbit-color, rgba(212,175,55,0.7))); }
+      to   { filter: drop-shadow(0 0 40px var(--orbit-color, rgba(212,175,55,1))); }
+    }
+
+    /* วงโคจร */
+    .orbit-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.5px dashed var(--orbit-color, rgba(212,175,55,0.5));
+      pointer-events: none;
+    }
+    .orbit-ring-1 {
+      width: 100%; height: 100%;
+      top: 0; left: 0;
+      animation: orbitSpin1 8s linear infinite;
+      transform-style: preserve-3d;
+    }
+    .orbit-ring-2 {
+      width: 80%; height: 80%;
+      top: 10%; left: 10%;
+      animation: orbitSpin2 12s linear infinite;
+      transform-style: preserve-3d;
+    }
+    .orbit-ring-3 {
+      width: 55%; height: 55%;
+      top: 22.5%; left: 22.5%;
+      animation: orbitSpin3 6s linear infinite;
+      transform-style: preserve-3d;
+    }
+    @keyframes orbitSpin1 {
+      0%   { transform: rotateX(65deg) rotateZ(0deg); }
+      100% { transform: rotateX(65deg) rotateZ(360deg); }
+    }
+    @keyframes orbitSpin2 {
+      0%   { transform: rotateX(40deg) rotateZ(0deg); }
+      100% { transform: rotateX(40deg) rotateZ(-360deg); }
+    }
+    @keyframes orbitSpin3 {
+      0%   { transform: rotateX(80deg) rotateZ(0deg); }
+      100% { transform: rotateX(80deg) rotateZ(360deg); }
+    }
+
+    /* จุดดาวเคราะห์บนวงโคจร */
+    .orbit-dot {
+      position: absolute;
+      width: 10px; height: 10px;
+      background: var(--orbit-color, #ffd700);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--orbit-color, #ffd700), 0 0 20px var(--orbit-color, #ffd700);
+      top: -5px; left: calc(50% - 5px);
+    }
+
+    /* ชื่อดาวและรัศมี */
+    .star-name-badge {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .star-name-badge .star-name-th {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-shadow: 0 0 20px var(--primary-glow);
+      letter-spacing: 1px;
+    }
+    .star-name-badge .star-name-en {
+      font-size: 0.95rem;
+      color: #a78bfa;
+      margin-top: 4px;
+    }
+
+    /* Keyword chips */
+    .keyword-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .keyword-chip {
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      color: #ffd700;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      animation: chipFadeIn 0.5s ease both;
+    }
+    @keyframes chipFadeIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* กล่องคำทำนาย */
+    .star-reading-box {
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(212,175,55,0.15);
+      border-radius: 16px;
+      padding: 22px;
+      line-height: 1.85;
+      font-size: 1rem;
+      color: #f3f4f6;
+      white-space: pre-wrap;
+    }
+
+    /* สีพิเศษแต่ละดาว */
+    .star-sun    { --orbit-color: rgba(255, 200, 50, 0.85); }
+    .star-moon   { --orbit-color: rgba(180, 200, 255, 0.85); }
+    .star-mars   { --orbit-color: rgba(255, 90, 60, 0.85); }
+    .star-mercury{ --orbit-color: rgba(100, 220, 180, 0.85); }
+    .star-jupiter{ --orbit-color: rgba(200, 150, 80, 0.85); }
+    .star-venus  { --orbit-color: rgba(255, 150, 220, 0.85); }
+    .star-saturn { --orbit-color: rgba(160, 130, 200, 0.85); }
+
+    /* ========================================= */
+    /* ต้นไม้มงคล — Plant Result UI                  */
+    /* ========================================= */
+
+    .plant-scene {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 28px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ต้นไม้กลาง */
+    .plant-emoji-main {
+      font-size: 5.5rem;
+      position: relative;
+      z-index: 5;
+      animation: plantSway 3s ease-in-out infinite alternate,
+                 plantGlow  2s ease-in-out infinite alternate;
+      display: inline-block;
+    }
+    @keyframes plantSway {
+      from { transform: rotate(-5deg) scale(1); }
+      to   { transform: rotate(5deg) scale(1.08); }
+    }
+    @keyframes plantGlow {
+      from { filter: drop-shadow(0 0 12px rgba(80, 220, 100, 0.5)); }
+      to   { filter: drop-shadow(0 0 32px rgba(80, 220, 100, 1)); }
+    }
+
+    /* วงออรา */
+    .plant-aura {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(80, 220, 100, 0.12) 0%, transparent 70%);
+      animation: auraPulse 2.5s ease-in-out infinite alternate;
+    }
+    @keyframes auraPulse {
+      from { transform: scale(0.9); opacity: 0.6; }
+      to   { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* ใบไม้ลอยอยู่รอบๆ */
+    .leaf {
+      position: absolute;
+      font-size: 1.4rem;
+      animation: leafOrbit linear infinite;
+      transform-origin: center center;
+    }
+    .leaf:nth-child(1) { animation-duration: 7s;  animation-delay: 0s; }
+    .leaf:nth-child(2) { animation-duration: 9s;  animation-delay: -3s; }
+    .leaf:nth-child(3) { animation-duration: 6s;  animation-delay: -1.5s; }
+    .leaf:nth-child(4) { animation-duration: 11s; animation-delay: -5s; }
+    .leaf:nth-child(5) { animation-duration: 8s;  animation-delay: -2s; }
+    .leaf:nth-child(6) { animation-duration: 10s; animation-delay: -4s; }
+
+    @keyframes leafOrbit {
+      0%   { transform: rotate(0deg)   translateX(85px) rotate(0deg)   scale(0.9); opacity: 0.7; }
+      50%  { opacity: 1; }
+      100% { transform: rotate(360deg) translateX(85px) rotate(-360deg) scale(1.1); opacity: 0.7; }
+    }
+
+    /* ตัวหนังสือสำหรับต้นไม้ */
+    .plant-title-badge {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .plant-title-badge .plant-name-main {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #6ee7b7;
+      text-shadow: 0 0 18px rgba(80, 220, 140, 0.6);
+      letter-spacing: 0.5px;
+    }
+    .plant-title-badge .plant-name-sub {
+      font-size: 0.9rem;
+      color: #a7f3d0;
+      margin-top: 5px;
+      font-weight: 300;
+    }
+
+    /* กล่องคำแนะนำต้นไม้ */
+    .plant-reading-box {
+      background: rgba(0, 30, 10, 0.4);
+      border: 1px solid rgba(80, 220, 100, 0.2);
+      border-radius: 16px;
+      padding: 22px;
+      line-height: 1.85;
+      font-size: 1rem;
+      color: #f3f4f6;
+      white-space: pre-wrap;
+    }
+
+    /* ========================================= */
+    /* Constellation — แผนที่หมู่ดาว              */
+    /* ========================================= */
+    .constellation-canvas-wrap {
+      position: relative;
+      width: 300px; height: 300px;
+      margin: 0 auto 24px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(100, 120, 255, 0.3), 0 0 80px rgba(100, 120, 255, 0.1);
+      border: 1px solid rgba(160, 170, 255, 0.2);
+    }
+    #constellation-canvas { display: block; }
+
+    .constellation-info {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .constellation-symbol {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 6px;
+      animation: starPulse 2s ease-in-out infinite alternate;
+    }
+    .constellation-name-th {
+      font-size: 1.7rem; font-weight: 700;
+      color: #c4b5fd;
+      text-shadow: 0 0 20px rgba(167,139,250,0.7);
+    }
+    .constellation-name-en {
+      font-size: 0.9rem; color: #a78bfa; margin-top: 4px;
+    }
+    .constellation-dates {
+      font-size: 0.8rem; color: #7c6fa0; margin-top: 4px;
+      letter-spacing: 0.5px;
+    }
+    .element-badge {
+      display: inline-block;
+      background: rgba(167,139,250,0.15);
+      border: 1px solid rgba(167,139,250,0.4);
+      color: #c4b5fd;
+      padding: 4px 14px; border-radius: 20px;
+      font-size: 0.8rem; margin-top: 8px;
+    }
+    .constellation-reading-box {
+      background: rgba(10, 5, 30, 0.5);
+      border: 1px solid rgba(167,139,250,0.2);
+      border-radius: 16px; padding: 22px;
+      line-height: 1.85; font-size: 1rem;
+      color: #f3f4f6; white-space: pre-wrap;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="particles" id="particles"></div>
+  <div class="bg-animation">
+    <div class="astrolabe-wheel wheel-1"></div>
+    <div class="astrolabe-wheel wheel-2"></div>
+    <div class="astrolabe-wheel wheel-3"></div>
+  </div>
+
+  <div class="modal-overlay" id="error-modal">
+    <div class="modal-content">
+      <div class="modal-icon">☄️</div>
+      <h3 class="modal-title">พลังงานดวงดาวแปรปรวน</h3>
+      <p class="modal-desc" id="modal-msg">ขออภัยค่ะ ขณะนี้คิวปรึกษาท่านโหรดีจังค่อนข้างแน่น ทำให้เชื่อมต่อพลังงานไม่สำเร็จ รบกวนลองใหม่อีกครั้งนะคะ 🙏✨</p>
+      <button class="modal-btn" onclick="closeModal()">ลองใหม่อีกครั้ง</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <div class="logo">✨</div>
+      <h1>DD Jang VIP</h1>
+      <p>เลือกบริการพิเศษสำหรับคุณ</p>
+    </div>
+
+    <div class="premium-voice-card" id="voice-chat-container">
+      <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+      
+      <div class="voice-header">
+        <div class="voice-avatar"><span>🔮</span></div>
+        <div class="voice-title">
+          <h2>สายตรงดีจัง</h2>
+          <p>เปิดไมค์พูดคุย ปรึกษาดวงชะตาแบบส่วนตัว</p>
+        </div>
+      </div>
+      
+      <button id="expand-voice-btn" onclick="toggleVoiceChat()">
+        <span>💬</span> แตะเพื่อเริ่มพูดคุย
+      </button>
+      
+      <div class="voice-chat-content" id="voice-chat-content">
+        <div id="chat-box" class="premium-chat-box">
+          <div class="chat-bubble"><span class="bot-name">ดีจัง:</span> <span style="color: #f3f4f6;">สวัสดีค่ะคุณลูกค้า VIP วันนี้มีเรื่องหนักใจอะไร อยากให้ดีจังเปิดไพ่ให้คะ? กดปุ่มไมค์แล้วพูดคุยมาได้เลยค่ะ ✨</span></div>
+        </div>
+
+        <div class="mic-control-area">
+          <button id="mic-btn">
+            🎤 แตะเพื่อเริ่มพูด
+          </button>
+          <p id="status-text" style="color: #a78bfa; font-size: 0.85rem; margin-top: 15px;">สถานะ: พร้อมรับฟังคำถาม...</p>
+        </div>
+      </div>
+    </div>
+    <div class="service-grid" id="service-grid">
+      <div class="service-card" onclick="selectService('astrology', this)">
+        <div class="service-icon">🔮</div>
+        <div class="service-info">
+          <h3>ผูกดวงโหราศาสตร์ไทย</h3>
+          <p>คัมภีร์เลข 7 ตัว 9 ฐาน แม่นยำลึกซึ้ง</p>
+        </div>
+      </div>
+      <div class="service-card" onclick="selectService('plants', this)">
+        <div class="service-icon">🪴</div>
+        <div class="service-info">
+          <h3>ต้นไม้มงคลประจำดวง</h3>
+          <p>หาต้นไม้เสริมโชคลาภ ความรัก การงาน</p>
+        </div>
+      </div>
+      <div class="service-card" onclick="selectService('lucky_number', this)">
+        <div class="service-icon">🔢</div>
+        <div class="service-info">
+          <h3>เลขมงคลประจำดวง</h3>
+          <p>วิเคราะห์กลุ่มตัวเลขเสริมดวงชะตา</p>
+        </div>
+      </div>
+      <div class="service-card" onclick="selectService('phone_number', this)">
+        <div class="service-icon">📱</div>
+        <div class="service-info">
+          <h3>วิเคราะห์เบอร์มงคล</h3>
+          <p>เช็คเบอร์มือถือของคุณว่าส่งเสริมดวงหรือไม่</p>
+        </div>
+      </div>
+      <div class="service-card" onclick="selectService('personal_star', this)">
+        <div class="service-icon">⭐</div>
+        <div class="service-info">
+          <h3>ดวงดาวประจำตัว</h3>
+          <p>ค้นหา Ruling Planet ผู้คุมชะตาจากวันเกิด</p>
+        </div>
+      </div>
+      <div class="service-card" onclick="selectService('constellation', this)">
+        <div class="service-icon">🌌</div>
+        <div class="service-info">
+          <h3>หมู่ดาวประจำตัว</h3>
+          <p>แผนที่ดาวราศีเกิด ตำนานและพลังจากจักรวาล</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-section" id="action-section">
+      <h2 id="action-title">ระบุข้อมูลของคุณ</h2>
+      <form id="vip-form">
+        <div class="form-group">
+          <label>วันเดือนปีเกิด (พ.ศ.)</label>
+          <input type="date" id="dob" required>
+        </div>
+        
+        <div class="form-group" id="phone-group" style="display: none;">
+          <label>เบอร์โทรศัพท์ของคุณ (10 หลัก)</label>
+          <input type="tel" id="phone" placeholder="08xxxxxxxx" pattern="[0-9]{10}">
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">
+          <span id="btn-text">ดำเนินการ</span>
+          <span>✨</span>
+        </button>
+      </form>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p style="color:var(--primary); font-weight: 600; font-size: 1.1rem; letter-spacing: 0.5px;" id="loading-title">กำลังสื่อสารกับดวงดาว...</p>
+      <p style="color:#c8b9e8; font-size: 0.85rem; margin-top: 8px;">ใช้เวลาประมวลผลประมาณ 10-15 วินาที</p>
+    </div>
+
+    <div class="result-section" id="result-section">
+      <div id="chart-area" style="display: none;">
+        <h2 style="font-size: 1.2rem; color:var(--primary); text-align:center; margin-bottom: 16px;">ดวงชะตาของคุณ</h2>
+        <div class="chart-container">
+          <table class="numerology-table" id="chart-table"></table>
+        </div>
+      </div>
+      <div class="ai-reading" id="ai-reading"></div>
+
+      <!-- Personal Star Result -->
+      <div id="star-result-area" style="display:none;">
+        <div class="star-scene" id="star-scene">
+          <!-- วงโคจร 3 ชั้น -->
+          <div class="orbit-ring orbit-ring-1"><div class="orbit-dot"></div></div>
+          <div class="orbit-ring orbit-ring-2"><div class="orbit-dot"></div></div>
+          <div class="orbit-ring orbit-ring-3"><div class="orbit-dot"></div></div>
+          <!-- ดาวกลาง -->
+          <div class="star-core">
+            <canvas class="planet-canvas" id="planet-canvas" width="120" height="120"></canvas>
+          </div>
+        </div>
+
+        <div class="star-name-badge">
+          <div class="star-name-th" id="star-name-th"></div>
+          <div class="star-name-en" id="star-name-en"></div>
+        </div>
+
+        <div class="keyword-chips" id="keyword-chips"></div>
+
+        <div class="star-reading-box" id="star-reading-box"></div>
+      </div>
+
+      <!-- Plant Result -->
+      <div id="plant-result-area" style="display:none;">
+        <div class="plant-scene">
+          <div class="plant-aura"></div>
+          <!-- ใบไม้โคจร -->
+          <span class="leaf">🍃</span>
+          <span class="leaf">🌿</span>
+          <span class="leaf">🍂</span>
+          <span class="leaf">🌻</span>
+          <span class="leaf">🍀</span>
+          <span class="leaf">✨</span>
+          <!-- ต้นไม้กลาง -->
+          <span class="plant-emoji-main" id="plant-emoji-main">🪴</span>
+        </div>
+
+        <div class="plant-title-badge">
+          <div class="plant-name-main">✨ ต้นไม้มงคลประจำดวงของคุณ ✨</div>
+          <div class="plant-name-sub">เสริมโชคลาภ • ความรัก • การงาน</div>
+        </div>
+
+        <div class="plant-reading-box" id="plant-reading-box"></div>
+      </div>
+
+      <!-- Constellation Result -->
+      <div id="constellation-result-area" style="display:none;">
+        <div class="constellation-canvas-wrap">
+          <canvas id="constellation-canvas" width="300" height="300"></canvas>
+        </div>
+        <div class="constellation-info">
+          <span class="constellation-symbol" id="const-symbol">♈</span>
+          <div class="constellation-name-th" id="const-name-th"></div>
+          <div class="constellation-name-en" id="const-name-en"></div>
+          <div class="constellation-dates" id="const-dates"></div>
+          <span class="element-badge" id="const-element"></span>
+        </div>
+        <div class="keyword-chips" id="const-keyword-chips"></div>
+        <div class="constellation-reading-box" id="const-reading-box"></div>
+      </div>
+      
+      <button class="submit-btn" style="margin-top: 24px; background: rgba(255,255,255,0.1); color: #fff; box-shadow: none;" onclick="location.reload()">
+        ↩️ กลับไปเลือกบริการใหม่
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    const userId = location.pathname.split('/').pop();
+    let currentService = null;
+
+    const actionSection = document.getElementById('action-section');
+    const actionTitle = document.getElementById('action-title');
+    const btnText = document.getElementById('btn-text');
+    const form = document.getElementById('vip-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const loading = document.getElementById('loading');
+    const loadingTitle = document.getElementById('loading-title');
+    const resultSection = document.getElementById('result-section');
+    const serviceGrid = document.getElementById('service-grid');
+    
+    // Popup Modal Elements
+    const errorModal = document.getElementById('error-modal');
+    const modalMsg = document.getElementById('modal-msg');
+
+    // Create particles
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 4 + 1;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.animationDuration = (Math.random() * 15 + 10) + 's';
+      p.style.animationDelay = (Math.random() * -20) + 's';
+      particlesContainer.appendChild(p);
+    }
+
+    // ฟังก์ชันสำหรับเปิด/ปิด หน้าต่าง Voice Chat
+    // ฟังก์ชันสำหรับเปิด/ปิด หน้าต่าง Voice Chat
+    function toggleVoiceChat() {
+      const content = document.getElementById('voice-chat-content');
+      const btn = document.getElementById('expand-voice-btn');
+      
+      // สลับสถานะ: ถ้าปิดอยู่ให้เปิด ถ้าเปิดอยู่ให้ปิด
+      const isExpanded = content.classList.toggle('expanded');
+      
+      // เปลี่ยนข้อความบนปุ่มให้ตรงกับสถานะ
+      if (isExpanded) {
+        // ตอนเปิดอยู่ ให้ปุ่มเป็นคำว่า ย่อหน้าต่าง
+        btn.innerHTML = '<span>⬆️</span> ย่อหน้าต่างพูดคุย';
+        btn.style.background = 'rgba(255, 255, 255, 0.05)';
+        btn.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        btn.style.color = '#c8b9e8';
+      } else {
+        // ตอนปิดอยู่ ให้ปุ่มเป็นคำว่า เริ่มพูดคุย
+        btn.innerHTML = '<span>💬</span> แตะเพื่อเริ่มพูดคุย';
+        btn.style.background = 'rgba(255, 215, 0, 0.1)';
+        btn.style.borderColor = 'rgba(255, 215, 0, 0.4)';
+        btn.style.color = '#ffd700';
+      }
+    }
+
+    function selectService(type, el) {
+      document.querySelectorAll('.service-card').forEach(card => card.classList.remove('active'));
+      el.classList.add('active');
+
+      // Spark Burst Effect
+      for (let i = 0; i < 20; i++) {
+        const spark = document.createElement('div');
+        spark.className = 'spark';
+        spark.style.left = '50%';
+        spark.style.top = '50%';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 100 + 40;
+        spark.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+        spark.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+        el.appendChild(spark);
+        setTimeout(() => spark.remove(), 800);
+      }
+      
+      currentService = type;
+      document.getElementById('voice-chat-container').style.display = 'none';
+      actionSection.style.display = 'block';
+      actionSection.style.animation = 'none';
+      setTimeout(() => actionSection.style.animation = 'fadeUp 0.5s ease forwards, pulseGlow 0.8s ease', 10);
+      resultSection.style.display = 'none';
+
+      // จัดการการแสดงผลช่องเบอร์โทร
+      const phoneGroup = document.getElementById('phone-group');
+      const phoneInput = document.getElementById('phone');
+
+      if (type === 'phone_number') {
+        phoneGroup.style.display = 'block';
+        phoneInput.required = true;
+      } else {
+        phoneGroup.style.display = 'none';
+        phoneInput.required = false;
+        phoneInput.value = '';
+      }
+
+      // เปลี่ยนข้อความตามเมนูที่เลือก
+      if (type === 'astrology') {
+        actionTitle.textContent = '🔮 ผูกดวงโหราศาสตร์ไทย';
+        btnText.textContent = 'ทำนายดวงชะตา';
+        loadingTitle.textContent = 'กำลังผูกดวงชะตาและสื่อสารกับดวงดาว...';
+      } else if (type === 'plants') {
+        actionTitle.textContent = '🪴 หาต้นไม้มงคลประจำดวง';
+        btnText.textContent = 'ค้นหาต้นไม้มงคล';
+        loadingTitle.textContent = 'กำลังวิเคราะห์ต้นไม้มงคลที่เหมาะกับคุณที่สุด...';
+      } else if (type === 'lucky_number') {
+        actionTitle.textContent = '🔢 หาเลขมงคลประจำดวง';
+        btnText.textContent = 'วิเคราะห์ตัวเลข';
+        loadingTitle.textContent = 'กำลังถอดรหัสตัวเลขมงคลจากวันเกิดของคุณ...';
+      } else if (type === 'phone_number') {
+        actionTitle.textContent = '📱 วิเคราะห์เบอร์มงคล';
+        btnText.textContent = 'วิเคราะห์เบอร์โทร';
+        loadingTitle.textContent = 'กำลังคัดกรองคู่เลขที่เหมาะสมกับดวงชะตาของคุณ...';
+      } else if (type === 'personal_star') {
+        actionTitle.textContent = '⭐ ค้นหาดวงดาวประจำตัว';
+        btnText.textContent = 'เปิดเผยดาวประจำตัว';
+        loadingTitle.textContent = 'กำลังสืบค้นพลังจากดวงดาวประจำตัวของคุณ...';
+      } else if (type === 'constellation') {
+        actionTitle.textContent = '🌌 ค้นหาหมู่ดาวประจำตัว';
+        btnText.textContent = 'เปิดแผนที่ดาว';
+        loadingTitle.textContent = 'กำลังสำรวจจักรวาลและค้นหาหมู่ดาวประจำราศีของคุณ...';
+      }
+    }
+
+    // ฟังก์ชันเปิด/ปิด Popup Modal
+    function showModal(message) {
+      if(message) modalMsg.textContent = message;
+      errorModal.classList.add('show');
+    }
+
+    function closeModal() {
+      errorModal.classList.remove('show');
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const dob = document.getElementById('dob').value;
+      const phone = document.getElementById('phone').value;
+      if (!dob || !currentService) return;
+
+      submitBtn.disabled = true;
+      actionSection.style.display = 'none';
+      serviceGrid.style.display = 'none';
+      loading.style.display = 'block';
+
+      try {
+        let endpoint = '';
+        if (currentService === 'astrology') endpoint = '/api/astrology/calculate';
+        else if (currentService === 'plants') endpoint = '/api/vip/plants';
+        else if (currentService === 'lucky_number') endpoint = '/api/vip/lucky-number';
+        else if (currentService === 'phone_number') endpoint = '/api/vip/phone-number';
+        else if (currentService === 'personal_star') endpoint = '/api/vip/personal-star';
+        else if (currentService === 'constellation') endpoint = '/api/vip/constellation';
+
+        const payload = { userId, dob };
+        if (currentService === 'phone_number') {
+            payload.phone = phone; 
+        }
+
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        
+        // ถ้า API มี Error ส่งกลับมา หรือเชื่อมต่อไม่ติด
+        if (!res.ok) {
+          throw new Error('ขออภัยค่ะ ขณะนี้คิวปรึกษาท่านโหรดีจังค่อนข้างแน่น ทำให้เชื่อมต่อพลังงานไม่สำเร็จ รบกวนลองใหม่อีกครั้งนะคะ 🙏✨');
+        }
+
+        renderResult(data, currentService);
+      } catch (err) {
+        // ถ้าเข้าเงื่อนไข Catch ให้โชว์ Modal แทน
+        showModal(err.message || 'พลังงานดวงดาวแปรปรวนชั่วคราว รบกวนลองใหม่อีกครั้งค่ะ');
+        
+        // คืนค่าหน้าจอกลับมาให้ผู้ใช้กดใหม่ได้
+        actionSection.style.display = 'block';
+        serviceGrid.style.display = 'grid';
+      } finally {
+        submitBtn.disabled = false;
+        loading.style.display = 'none';
+      }
+    });
+
+    // ข้อมูลดาวสำหรับ Front-end (emoji + class สี)
+    const STAR_FE = {
+      0: { planetKey: 'sun',     classSuffix: 'sun',     nameTH: 'ดาวอาทิตย์',   nameEN: 'The Sun — Lord of Sunday' },
+      1: { planetKey: 'moon',    classSuffix: 'moon',    nameTH: 'ดาวจันทร์',    nameEN: 'The Moon — Lord of Monday' },
+      2: { planetKey: 'mars',    classSuffix: 'mars',    nameTH: 'ดาวอังคาร',    nameEN: 'Mars — Lord of Tuesday' },
+      3: { planetKey: 'mercury', classSuffix: 'mercury', nameTH: 'ดาวพุธ',       nameEN: 'Mercury — Lord of Wednesday' },
+      4: { planetKey: 'jupiter', classSuffix: 'jupiter', nameTH: 'ดาวพฤหัสบดี', nameEN: 'Jupiter — Lord of Thursday' },
+      5: { planetKey: 'venus',   classSuffix: 'venus',   nameTH: 'ดาวศุกร์',     nameEN: 'Venus — Lord of Friday' },
+      6: { planetKey: 'saturn',  classSuffix: 'saturn',  nameTH: 'ดาวเสาร์',     nameEN: 'Saturn — Lord of Saturday' },
+    };
+
+    function renderResult(data, type) {
+      resultSection.style.display = 'block';
+      const chartArea    = document.getElementById('chart-area');
+      const aiReading    = document.getElementById('ai-reading');
+      const starArea     = document.getElementById('star-result-area');
+      const plantArea    = document.getElementById('plant-result-area');
+      const constArea    = document.getElementById('constellation-result-area');
+
+      // ซ่อนส่วนที่ไม่ใช้ก่อน
+      chartArea.style.display  = 'none';
+      aiReading.style.display  = 'none';
+      starArea.style.display   = 'none';
+      plantArea.style.display  = 'none';
+      constArea.style.display  = 'none';
+
+      if (type === 'personal_star') {
+        // --- แสดง Personal Star UI ---
+        const fe = STAR_FE[data.dayOfWeek] || { planetKey: 'sun', classSuffix: 'sun', nameTH: data.starName, nameEN: '' };
+
+        // set class สีวงโคจร
+        document.getElementById('star-scene').className = 'star-scene star-' + fe.classSuffix;
+
+        // ชื่อดาว
+        document.getElementById('star-name-th').textContent = fe.nameTH;
+        document.getElementById('star-name-en').textContent = fe.nameEN;
+
+        // Keyword chips
+        const chipsEl = document.getElementById('keyword-chips');
+        chipsEl.innerHTML = '';
+        data.keywords.forEach((kw, i) => {
+          const chip = document.createElement('span');
+          chip.className = 'keyword-chip';
+          chip.textContent = kw;
+          chip.style.animationDelay = (i * 0.08) + 's';
+          chipsEl.appendChild(chip);
+        });
+
+        // คำทำนาย
+        document.getElementById('star-reading-box').textContent = data.reading;
+
+        starArea.style.display = 'block';
+        // วาดดาวเคราะห์บน Canvas
+        startPlanetAnim(fe.planetKey);
+
+
+      } else if (type === 'plants') {
+        // --- แสดง Plant UI ---
+        document.getElementById('plant-reading-box').textContent = data.reading;
+        plantArea.style.display = 'block';
+
+      } else if (type === 'constellation') {
+        // --- แสดง Constellation UI ---
+        document.getElementById('const-symbol').textContent  = data.symbol;
+        document.getElementById('const-name-th').textContent = data.nameTH;
+        document.getElementById('const-name-en').textContent = data.nameEN;
+        document.getElementById('const-dates').textContent   = data.dates;
+        document.getElementById('const-element').textContent = 'ธาตุ' + data.element;
+        document.getElementById('const-reading-box').textContent = data.reading;
+
+        // keyword chips
+        const cchips = document.getElementById('const-keyword-chips');
+        cchips.innerHTML = '';
+        data.keywords.forEach((kw, i) => {
+          const c = document.createElement('span');
+          c.className = 'keyword-chip';
+          c.textContent = kw;
+          c.style.animationDelay = (i * 0.08) + 's';
+          cchips.appendChild(c);
+        });
+
+        constArea.style.display = 'block';
+        drawConstellation(data.zodiacIndex);
+
+      } else if (type === 'astrology' && data.table) {
+        chartArea.style.display = 'block';
+        aiReading.style.display = 'block';
+        const t = data.table;
+        const h = data.houses;
+        let tableHtml = `<thead><tr><th></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></tr></thead><tbody>`;
+        const rowNames = ["วัน", "เดือน", "ปี"];
+        for (let r = 0; r < 3; r++) {
+          tableHtml += `<tr><td class="row-label">${rowNames[r]}</td>`;
+          for (let c = 0; c < 7; c++) {
+            tableHtml += `<td>${t[r][c]}<br><span style="font-size:0.65rem; color:#a78bfa">${h[r][c]}</span></td>`;
+          }
+          tableHtml += `</tr>`;
+        }
+        tableHtml += `<tr class="base-4"><td class="row-label">กำลัง</td>`;
+        for (let c = 0; c < 7; c++) { tableHtml += `<td>${t[3][c]}</td>`; }
+        tableHtml += `</tr></tbody>`;
+        document.getElementById('chart-table').innerHTML = tableHtml;
+
+        let formattedReading = data.reading.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--primary); font-weight:600;">$1</strong>');
+        aiReading.innerHTML = formattedReading;
+      } else {
+        aiReading.style.display = 'block';
+        let formattedReading = data.reading.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--primary); font-weight:600;">$1</strong>');
+        aiReading.innerHTML = formattedReading;
+      }
+    }
+
+    // ==========================================
+    // โค้ดระบบ Voice Chat
+    // ==========================================
+    const micBtn = document.getElementById('mic-btn');
+    const chatBox = document.getElementById('chat-box');
+    const statusText = document.getElementById('status-text');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'th-TH';
+    recognition.continuous = true;
+    recognition.interimResults = false; 
+
+    let isListening = false;
+    let fullSpokenText = "";
+    let speechUnlocked = false;
+
+    window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+    };
+
+    micBtn.addEventListener('click', () => {
+        if (!speechUnlocked) {
+            const unlockUtterance = new SpeechSynthesisUtterance('');
+            unlockUtterance.volume = 0;
+            window.speechSynthesis.speak(unlockUtterance);
+            speechUnlocked = true;
+        }
+
+        if (!isListening) {
+            try {
+                fullSpokenText = "";
+                recognition.start();
+                isListening = true;
+                micBtn.classList.add('listening');
+                micBtn.innerHTML = '⏹️ แตะเพื่อหยุดและส่ง';
+                statusText.innerText = 'สถานะ: กำลังฟัง... (พูดจบแล้วแตะปุ่มอีกครั้งนะคะ)';
+            } catch(e) {
+                console.error("Mic error:", e);
+            }
+        } else {
+            recognition.stop();
+            isListening = false;
+            micBtn.classList.remove('listening');
+            micBtn.innerHTML = '⏳ กำลังรวบรวมคำถาม...';
+            statusText.innerText = 'สถานะ: กำลังประมวลผลเสียง...';
+        }
+    });
+
+    recognition.onresult = (event) => {
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                fullSpokenText += event.results[i][0].transcript + " ";
+            }
+        }
+    };
+
+    recognition.onend = async () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+
+        if (fullSpokenText.trim() === "") {
+            statusText.innerText = 'สถานะ: ไม่ได้ยินเสียงเลยค่ะ แตะเพื่อพูดใหม่นะคะ';
+            micBtn.innerHTML = '🎤 แตะเพื่อเริ่มพูด';
+            return;
+        }
+
+        appendMessage('คุณ', fullSpokenText.trim(), true);
+        
+        micBtn.innerHTML = '⏳ กำลังเปิดไพ่...';
+        statusText.innerText = 'สถานะ: กำลังส่งกระแสจิตหา AI...';
+
+        try {
+            const response = await fetch('/api/vip-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    userId: userId, 
+                    message: fullSpokenText.trim() 
+                })
+            });
+
+            const data = await response.json();
+            
+            appendMessage('ดีจัง', data.reply, false);
+            micBtn.innerHTML = '🎤 แตะเพื่อพูดต่อ';
+            statusText.innerText = 'สถานะ: พร้อมรับฟังคำถาม...';
+
+            speakText(data.reply);
+
+        } catch (error) {
+            console.error("Error:", error);
+            statusText.innerText = 'สถานะ: พลังงานขัดข้องชั่วคราวค่ะ';
+            micBtn.innerHTML = '🎤 แตะเพื่อเริ่มพูด';
+        }
+    };
+
+    recognition.onerror = (event) => {
+        if (event.error === 'no-speech') return;
+        console.error("Speech Error:", event.error);
+        statusText.innerText = 'สถานะ: ระบบไมค์มีปัญหา รบกวนลองใหม่นะคะ';
+        isListening = false;
+        micBtn.classList.remove('listening');
+        micBtn.innerHTML = '🎤 แตะเพื่อเริ่มพูด';
+    };
+
+    function appendMessage(sender, text, isUser) {
+        const p = document.createElement('div');
+        p.className = 'chat-bubble';
+        
+        if (isUser) {
+            p.innerHTML = `<span class="user-name">คุณ:</span> <span style="color: #fff;">${text}</span>`;
+        } else {
+            p.innerHTML = `<span class="bot-name">ดีจัง:</span> <span style="color: #f3f4f6;">${text}</span>`;
+        }
+        
+        chatBox.appendChild(p);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function speakText(text) {
+        window.speechSynthesis.cancel();
+        statusText.innerText = 'สถานะ: แม่หมอกำลังพูดคุยกับคุณ...';
+
+        try {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'th-TH'; 
+            
+            const voices = window.speechSynthesis.getVoices();
+            const thaiVoice = voices.find(voice => voice.lang === 'th-TH' || voice.lang === 'th_TH');
+            if (thaiVoice) {
+                utterance.voice = thaiVoice;
+            }
+
+            utterance.pitch = 1.6; 
+            utterance.rate = 1.15; 
+
+            utterance.onend = () => {
+                statusText.innerText = 'สถานะ: พร้อมรับฟังคำถาม...';
+            };
+
+            utterance.onerror = (event) => {
+                console.error("SpeechSynthesis Error:", event);
+                statusText.innerText = 'สถานะ: ระบบเสียงมีปัญหา รบกวนลองใหม่นะคะ';
+            };
+
+            window.speechSynthesis.speak(utterance);
+
+        } catch (error) {
+            console.error("Audio Playback Error:", error);
+            statusText.innerText = 'สถานะ: พลังงานเสียงขัดข้อง รบกวนลองใหม่นะคะ';
+        }
+    }
+
+    // ============================================================
+    // ============================================================
+    // Planet Canvas Renderers — วาดดาวเคราะห์สวยๆ ทั้ง 7 ดวง
+    // ============================================================
+    const PLANET_RENDERERS = {
+      sun: (ctx, cx, cy, r, t) => {
+        const pulse = 1 + 0.06 * Math.sin(t * 0.002);
+        const corona = ctx.createRadialGradient(cx, cy, r * 0.6, cx, cy, r * 2.3 * pulse);
+        corona.addColorStop(0, 'rgba(255,210,0,0.55)');
+        corona.addColorStop(0.5, 'rgba(255,100,0,0.2)');
+        corona.addColorStop(1, 'transparent');
+        ctx.beginPath(); ctx.arc(cx, cy, r * 2.3 * pulse, 0, Math.PI * 2);
+        ctx.fillStyle = corona; ctx.fill();
+        const g = ctx.createRadialGradient(cx - r*.28, cy - r*.28, r*.04, cx, cy, r);
+        g.addColorStop(0, '#fffff5'); g.addColorStop(.2, '#FFE033');
+        g.addColorStop(.6, '#FF9900'); g.addColorStop(1, '#c43000');
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+      },
+      moon: (ctx, cx, cy, r, t) => {
+        const g = ctx.createRadialGradient(cx - r*.22, cy - r*.22, 0, cx, cy, r);
+        g.addColorStop(0, '#dde6f0'); g.addColorStop(.5, '#a0b0c0'); g.addColorStop(1, '#3a4a58');
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+        [[.22,.12,.11],[-.28,-.18,.09],[.08,-.28,.07],[-.12,.28,.06]].forEach(([dx,dy,cr]) => {
+          ctx.beginPath(); ctx.arc(cx+dx*r, cy+dy*r, cr*r, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fill();
+          ctx.beginPath(); ctx.arc(cx+dx*r-cr*r*.4, cy+dy*r-cr*r*.4, cr*r*.45, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fill();
+        });
+      },
+      mars: (ctx, cx, cy, r, t) => {
+        const g = ctx.createRadialGradient(cx - r*.25, cy - r*.25, 0, cx, cy, r);
+        g.addColorStop(0, '#ffb080'); g.addColorStop(.4, '#e04818'); g.addColorStop(1, '#6a1000');
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+        ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip();
+        [[-.15,.12,.22],[.2,-.18,.15],[.05,.28,.13]].forEach(([dx,dy,cr]) => {
+          ctx.beginPath(); ctx.arc(cx+dx*r, cy+dy*r, cr*r, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(80,10,0,0.3)'; ctx.fill();
+        });
+        ctx.beginPath(); ctx.arc(cx, cy - r*.78, r*.22, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.fill();
+        ctx.restore();
+      },
+      mercury: (ctx, cx, cy, r, t) => {
+        const g = ctx.createRadialGradient(cx - r*.22, cy - r*.22, 0, cx, cy, r);
+        g.addColorStop(0, '#d8d8cc'); g.addColorStop(.5, '#888880'); g.addColorStop(1, '#303030');
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+        [[.18,.1,.1],[-.26,-.16,.13],[.06,-.25,.08],[-.1,.3,.07],[.3,-.1,.09]].forEach(([dx,dy,cr]) => {
+          ctx.beginPath(); ctx.arc(cx+dx*r, cy+dy*r, cr*r, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.fill();
+        });
+      },
+      jupiter: (ctx, cx, cy, r, t) => {
+        ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip();
+        const g = ctx.createRadialGradient(cx - r*.2, cy - r*.2, 0, cx, cy, r);
+        g.addColorStop(0, '#f8e8c0'); g.addColorStop(.5, '#d09050'); g.addColorStop(1, '#7a3010');
+        ctx.fillStyle = g; ctx.fillRect(cx-r, cy-r, r*2, r*2);
+        const bands = [[-.48,.14,'rgba(170,80,30,0.55)'],[-.2,.1,'rgba(240,190,130,0.4)'],[.04,.16,'rgba(155,65,20,0.5)'],[.3,.12,'rgba(200,130,70,0.4)']];
+        bands.forEach(([y,h,c]) => { ctx.fillStyle=c; ctx.fillRect(cx-r, cy+y*r*2, r*2, h*r*2); });
+        ctx.beginPath(); ctx.ellipse(cx+r*.12, cy+r*.1, r*.2, r*.11, 0, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(200,55,25,0.75)'; ctx.fill();
+        ctx.restore();
+      },
+      venus: (ctx, cx, cy, r, t) => {
+        const g = ctx.createRadialGradient(cx - r*.22, cy - r*.22, 0, cx, cy, r);
+        g.addColorStop(0, '#fffff5'); g.addColorStop(.3, '#f0e095'); g.addColorStop(.7, '#d09030'); g.addColorStop(1, '#7a4800');
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+        ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip();
+        for (let i = 0; i < 3; i++) {
+          const a = t * 0.0003 + i * Math.PI * 2 / 3;
+          ctx.beginPath(); ctx.arc(cx + Math.cos(a)*r*.35, cy + Math.sin(a)*r*.3, r*.38, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(255,255,230,0.14)'; ctx.fill();
+        }
+        ctx.restore();
+      },
+      saturn: (ctx, cx, cy, r, t) => {
+        const g = ctx.createRadialGradient(cx - r*.22, cy - r*.22, 0, cx, cy, r);
+        g.addColorStop(0, '#f8eecc'); g.addColorStop(.4, '#c8a055'); g.addColorStop(.8, '#907030'); g.addColorStop(1, '#503010');
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+        ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip();
+        [-.32,-.1,.1,.3].forEach(y => { ctx.fillStyle='rgba(150,90,30,0.22)'; ctx.fillRect(cx-r, cy+y*r, r*2, r*.13); });
+        ctx.restore();
+      },
+    };
+
+    let planetAnimId = null;
+    function startPlanetAnim(key) {
+      if (planetAnimId) cancelAnimationFrame(planetAnimId);
+      const canvas = document.getElementById('planet-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const cx = W / 2, cy = H / 2, r = W * 0.42;
+      const renderer = PLANET_RENDERERS[key] || PLANET_RENDERERS.sun;
+      function frame(t) {
+        ctx.clearRect(0, 0, W, H);
+        renderer(ctx, cx, cy, r, t);
+        // Highlight sheen
+        const sheen = ctx.createRadialGradient(cx - r*.32, cy - r*.32, 0, cx - r*.1, cy - r*.1, r*.8);
+        sheen.addColorStop(0, 'rgba(255,255,255,0.32)');
+        sheen.addColorStop(1, 'transparent');
+        ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip();
+        ctx.fillStyle = sheen; ctx.fillRect(0, 0, W, H);
+        ctx.restore();
+        planetAnimId = requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // ============================================================
+    // drawConstellation — วาดแผนที่หมู่ดาวบน Canvas
+    // ============================================================
+    const CONST_DATA = [
+      // 0 Aries
+      { color:'#ffaaaa', stars:[{x:.60,y:.33},{x:.53,y:.42},{x:.48,y:.50},{x:.43,y:.60}], edges:[[0,1],[1,2],[2,3]] },
+      // 1 Taurus
+      { color:'#ffe97a', stars:[{x:.58,y:.48},{x:.48,y:.40},{x:.40,y:.35},{x:.33,y:.30},{x:.27,y:.25},{x:.37,y:.37},{x:.50,y:.28}], edges:[[0,1],[1,2],[2,3],[3,4],[2,5],[1,6]] },
+      // 2 Gemini
+      { color:'#aaeeff', stars:[{x:.38,y:.24},{x:.54,y:.22},{x:.39,y:.36},{x:.41,y:.50},{x:.43,y:.64},{x:.45,y:.76},{x:.56,y:.34},{x:.58,y:.48},{x:.60,y:.62}], edges:[[0,1],[0,2],[2,3],[3,4],[4,5],[1,6],[6,7],[7,8]] },
+      // 3 Cancer
+      { color:'#d8b4fe', stars:[{x:.50,y:.36},{x:.36,y:.44},{x:.50,y:.54},{x:.64,y:.44},{x:.50,y:.64}], edges:[[0,1],[0,2],[0,3],[2,4],[1,2],[2,3]] },
+      // 4 Leo
+      { color:'#ffd700', stars:[{x:.60,y:.64},{x:.52,y:.50},{x:.42,y:.39},{x:.34,y:.34},{x:.28,y:.38},{x:.32,y:.48},{x:.68,y:.46},{x:.72,y:.36},{x:.76,y:.28}], edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,1],[1,6],[6,7],[7,8]] },
+      // 5 Virgo
+      { color:'#86efac', stars:[{x:.50,y:.28},{x:.43,y:.37},{x:.36,y:.46},{x:.43,y:.56},{x:.50,y:.64},{x:.57,y:.72},{x:.60,y:.44},{x:.68,y:.36}], edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[3,6],[6,7]] },
+      // 6 Libra
+      { color:'#fdba74', stars:[{x:.36,y:.64},{x:.50,y:.55},{x:.64,y:.64},{x:.50,y:.36}], edges:[[0,1],[1,2],[1,3],[0,3],[2,3]] },
+      // 7 Scorpius
+      { color:'#f87171', stars:[{x:.33,y:.24},{x:.37,y:.32},{x:.42,y:.40},{x:.46,y:.47},{x:.52,y:.53},{x:.57,y:.59},{x:.60,y:.67},{x:.62,y:.74},{x:.56,y:.78},{x:.48,y:.76}], edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9]] },
+      // 8 Sagittarius
+      { color:'#fb923c', stars:[{x:.50,y:.28},{x:.42,y:.40},{x:.50,y:.50},{x:.60,y:.40},{x:.60,y:.57},{x:.45,y:.60},{x:.36,y:.52},{x:.40,y:.65}], edges:[[0,1],[1,2],[2,3],[3,0],[2,4],[4,5],[5,6],[6,1],[5,7]] },
+      // 9 Capricorn
+      { color:'#94a3b8', stars:[{x:.28,y:.38},{x:.38,y:.32},{x:.52,y:.30},{x:.63,y:.34},{x:.70,y:.44},{x:.63,y:.56},{x:.50,y:.62},{x:.37,y:.58},{x:.28,y:.48}], edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,0]] },
+      // 10 Aquarius
+      { color:'#67e8f9', stars:[{x:.36,y:.34},{x:.44,y:.40},{x:.52,y:.37},{x:.58,y:.44},{x:.65,y:.40},{x:.42,y:.54},{x:.50,y:.60},{x:.58,y:.54},{x:.65,y:.60}], edges:[[0,1],[1,2],[2,3],[3,4],[1,5],[5,6],[6,7],[7,8],[3,7]] },
+      // 11 Pisces
+      { color:'#a5b4fc', stars:[{x:.28,y:.38},{x:.33,y:.28},{x:.42,y:.26},{x:.47,y:.33},{x:.40,y:.40},{x:.50,y:.46},{x:.60,y:.42},{x:.67,y:.35},{x:.72,y:.26},{x:.65,y:.20},{x:.55,y:.22}], edges:[[0,1],[1,2],[2,3],[3,4],[4,0],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,6]] },
+    ];
+
+    let constAnimId = null;
+    function drawConstellation(idx) {
+      if (constAnimId) cancelAnimationFrame(constAnimId);
+      const canvas = document.getElementById('constellation-canvas');
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const data = CONST_DATA[idx] || CONST_DATA[0];
+      const col = data.color;
+
+      // สร้างดาวพื้นหลังแบบสุ่มครั้งเดียว
+      const bgStars = Array.from({length: 120}, () => ({
+        x: Math.random() * W, y: Math.random() * H,
+        r: Math.random() * 1.2 + 0.3,
+        phase: Math.random() * Math.PI * 2,
+        speed: Math.random() * 0.02 + 0.01,
+      }));
+
+      // scale star coords to canvas
+      const pts = data.stars.map(s => ({ x: s.x * W, y: s.y * H, phase: Math.random() * Math.PI * 2 }));
+
+      function frame(t) {
+        ctx.clearRect(0, 0, W, H);
+
+        // พื้นหลังจักรวาล
+        ctx.fillStyle = '#050010';
+        ctx.fillRect(0, 0, W, H);
+
+        // ดาวพื้นหลัง (กระพริบ)
+        bgStars.forEach(s => {
+          const alpha = 0.3 + 0.5 * Math.sin(t * s.speed + s.phase);
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+          ctx.fill();
+        });
+
+        // เส้นเชื่อมหมู่ดาว
+        ctx.lineWidth = 1;
+        data.edges.forEach(([a, b]) => {
+          const grad = ctx.createLinearGradient(pts[a].x, pts[a].y, pts[b].x, pts[b].y);
+          grad.addColorStop(0, col.replace(')', ',0.5)').replace('rgb', 'rgba'));
+          grad.addColorStop(1, col.replace(')', ',0.2)').replace('rgb', 'rgba'));
+          ctx.strokeStyle = col + '55';
+          ctx.beginPath();
+          ctx.moveTo(pts[a].x, pts[a].y);
+          ctx.lineTo(pts[b].x, pts[b].y);
+          ctx.stroke();
+        });
+
+        // จุดดาวหลัก (กระพริบ)
+        pts.forEach((p, i) => {
+          const alpha = 0.7 + 0.3 * Math.sin(t * 0.04 + p.phase);
+          const r = 3.5 + 1.5 * Math.sin(t * 0.03 + p.phase);
+          // halo
+          const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 4);
+          grd.addColorStop(0, col + 'cc');
+          grd.addColorStop(1, 'transparent');
+          ctx.beginPath(); ctx.arc(p.x, p.y, r * 4, 0, Math.PI * 2);
+          ctx.fillStyle = grd; ctx.fill();
+          // core
+          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+          ctx.fillStyle = col; ctx.globalAlpha = alpha; ctx.fill();
+          ctx.globalAlpha = 1;
+        });
+
+        constAnimId = requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+  </script>
+</body>
+</html>

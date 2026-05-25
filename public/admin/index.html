@@ -1,0 +1,2909 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DD Jang Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/flex-render@0.1.10/dist/index.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0f;
+      color: #e2e8f0;
+      min-height: 100vh
+    }
+
+    /* LINE Simulator frame */
+    .phone-frame { width: 340px; height: 600px; background: #849fb4; border-radius: 40px; border: 12px solid #111; box-shadow: 0 20px 40px rgba(0,0,0,0.6); margin: 0 auto; position: relative; overflow: hidden; display: flex; flex-direction: column; flex-shrink: 0; }
+    .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 25px; background: #111; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 10; }
+    .phone-header { background: #06c755; color: white; padding: 40px 15px 12px; font-weight: 600; font-size: .95rem; display: flex; align-items: center; gap: 10px; }
+    .phone-body { flex: 1; overflow-y: auto; padding: 15px 15px 40px; display: flex; flex-direction: column; gap: 10px; }
+    .phone-body::-webkit-scrollbar { width: 4px; }
+    .phone-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }
+
+    :root {
+      --gold: #f59e0b;
+      --gold2: #fbbf24;
+      --purple: #7c3aed;
+      --red: #ef4444;
+      --green: #10b981;
+      --blue: #3b82f6;
+      --bg1: #0a0a0f;
+      --bg2: #111118;
+      --bg3: #1a1a26;
+      --border: rgba(255, 255, 255, .08)
+    }
+
+    /* Layout */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 220px;
+      height: 100vh;
+      background: #0d0d1a;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 100
+    }
+
+    .main {
+      margin-left: 220px;
+      min-height: 100vh;
+      padding: 28px
+    }
+
+    /* Sidebar */
+    .brand {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    /* stylelint-disable property-no-vendor-prefix */
+    .brand h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent
+    }
+
+    /* stylelint-enable property-no-vendor-prefix */
+    .brand p {
+      font-size: .7rem;
+      color: #6b7280;
+      margin-top: 2px
+    }
+
+    nav {
+      flex: 1;
+      padding: 12px 0
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 20px;
+      cursor: pointer;
+      font-size: .82rem;
+      color: #9ca3af;
+      border-left: 3px solid transparent;
+      transition: .2s
+    }
+
+    .nav-item:hover {
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, .04)
+    }
+
+    .nav-item.active {
+      color: var(--gold);
+      border-left-color: var(--gold);
+      background: rgba(245, 158, 11, .06)
+    }
+
+    .nav-item .icon {
+      font-size: 1rem;
+      width: 20px;
+      text-align: center
+    }
+
+    .badge {
+      background: var(--red);
+      color: #fff;
+      font-size: .65rem;
+      border-radius: 99px;
+      padding: 1px 6px;
+      margin-left: auto
+    }
+
+    /* Cards */
+    .page {
+      display: none
+    }
+
+    .page.active {
+      display: block
+    }
+
+    .page-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #f1f5f9
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px
+    }
+
+    .stat-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(245, 158, 11, .06), transparent);
+      pointer-events: none
+    }
+
+    .stat-card .label {
+      font-size: .72rem;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: .05em
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin: 6px 0
+    }
+
+    .stat-card .icon {
+      position: absolute;
+      right: 16px;
+      top: 16px;
+      font-size: 1.5rem;
+      opacity: .3
+    }
+
+    /* Tables */
+    .card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 20px
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .card-header h3 {
+      font-size: .9rem;
+      font-weight: 600
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .8rem
+    }
+
+    th {
+      padding: 10px 16px;
+      text-align: left;
+      color: #6b7280;
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap
+    }
+
+    td {
+      padding: 11px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, .04);
+      vertical-align: middle
+    }
+
+    tr:last-child td {
+      border-bottom: none
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, .02)
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: .78rem;
+      font-weight: 500;
+      font-family: inherit;
+      transition: .2s
+    }
+
+    .btn-green {
+      background: rgba(16, 185, 129, .15);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, .3)
+    }
+
+    .btn-green:hover {
+      background: rgba(16, 185, 129, .25)
+    }
+
+    .btn-red {
+      background: rgba(239, 68, 68, .15);
+      color: var(--red);
+      border: 1px solid rgba(239, 68, 68, .3)
+    }
+
+    .btn-red:hover {
+      background: rgba(239, 68, 68, .25)
+    }
+
+    .btn-gold {
+      background: rgba(245, 158, 11, .15);
+      color: var(--gold);
+      border: 1px solid rgba(245, 158, 11, .3)
+    }
+
+    .btn-gold:hover {
+      background: rgba(245, 158, 11, .25)
+    }
+
+    .btn-blue {
+      background: rgba(59, 130, 246, .15);
+      color: var(--blue);
+      border: 1px solid rgba(59, 130, 246, .3)
+    }
+
+    .btn-blue:hover {
+      background: rgba(59, 130, 246, .25)
+    }
+
+    /* Slip images */
+    .slip-img {
+      width: 70px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: .2s
+    }
+
+    .slip-img:hover {
+      transform: scale(1.08)
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .8);
+      z-index: 999;
+      align-items: center;
+      justify-content: center
+    }
+
+    .modal-overlay.open {
+      display: flex
+    }
+
+    .modal {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      min-width: 340px;
+      max-width: 92vw
+    }
+
+    .modal h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 18px
+    }
+
+    .form-group {
+      margin-bottom: 14px
+    }
+
+    .form-group label {
+      display: block;
+      font-size: .78rem;
+      color: #9ca3af;
+      margin-bottom: 6px
+    }
+
+    .form-group input {
+      width: 100%;
+      background: #0d0d1a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #e2e8f0;
+      font-size: .85rem;
+      font-family: inherit;
+      outline: none
+    }
+
+    .form-group input:focus {
+      border-color: var(--gold)
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px
+    }
+
+    /* Chat user cards */
+    .chat-user-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      flex-direction: column
+    }
+
+    .chat-user-card:hover {
+      border-color: var(--blue);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(59, 130, 246, .15)
+    }
+
+    .chat-card-header {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .chat-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      color: #fff
+    }
+
+    .chat-card-body {
+      padding: 12px 16px;
+      flex: 1
+    }
+
+    .chat-card-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    /* Chat detail modal */
+    .chat-modal-header {
+      background: linear-gradient(135deg, rgba(59, 130, 246, .1), rgba(124, 58, 237, .1));
+      border-bottom: 1px solid var(--border);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0
+    }
+
+    .chat-modal-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .95rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      color: #fff
+    }
+
+    /* Bubble styles */
+    .bubble-user {
+      align-self: flex-end;
+      max-width: 78%;
+      background: #1e3a5f;
+      border: 1px solid rgba(59, 130, 246, .25);
+      border-radius: 16px 16px 4px 16px;
+      padding: 10px 14px
+    }
+
+    .bubble-bot {
+      align-self: flex-start;
+      max-width: 78%;
+      background: rgba(124, 58, 237, .12);
+      border: 1px solid rgba(124, 58, 237, .25);
+      border-radius: 16px 16px 16px 4px;
+      padding: 10px 14px
+    }
+
+    .bubble-reader {
+      align-self: flex-start;
+      max-width: 78%;
+      background: rgba(16, 185, 129, .12);
+      border: 1px solid rgba(16, 185, 129, .25);
+      border-radius: 16px 16px 16px 4px;
+      padding: 10px 14px
+    }
+
+    .bubble-time {
+      font-size: .62rem;
+      color: #6b7280;
+      margin-bottom: 3px
+    }
+
+    .bubble-text {
+      font-size: .82rem;
+      white-space: pre-wrap;
+      line-height: 1.5
+    }
+
+    /* Status badges */
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: .7rem;
+      font-weight: 500
+    }
+
+    .tag-vip {
+      background: rgba(245, 158, 11, .15);
+      color: var(--gold)
+    }
+
+    .tag-stripe {
+      background: rgba(99, 102, 241, .15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .tag-normal {
+      background: rgba(107, 114, 128, .15);
+      color: #9ca3af
+    }
+
+    .tag-pending {
+      background: rgba(251, 191, 36, .15);
+      color: var(--gold2)
+    }
+
+    .tag-approved {
+      background: rgba(16, 185, 129, .15);
+      color: var(--green)
+    }
+
+    .tag-rejected {
+      background: rgba(239, 68, 68, .15);
+      color: var(--red)
+    }
+
+    .tag-angpao {
+      background: rgba(249, 115, 22, .15);
+      color: #fb923c
+    }
+
+    /* Lightbox */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .92);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out
+    }
+
+    .lightbox.open {
+      display: flex
+    }
+
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 12px
+    }
+
+    /* Responsive */
+    @media(max-width:768px) {
+      .sidebar {
+        width: 60px
+      }
+
+      .sidebar .brand p,
+      .nav-item span,
+      .brand h1 {
+        display: none
+      }
+
+      .main {
+        margin-left: 60px
+      }
+
+      .nav-item {
+        justify-content: center;
+        padding: 14px
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr 1fr
+      }
+    }
+    /* Live Chat Widget */
+    #live-chat-widget {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 360px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      transform-origin: bottom right;
+      font-family: 'Sarabun', sans-serif;
+    }
+    #live-chat-widget.collapsed {
+      width: 60px;
+      height: 60px;
+      border-radius: 30px;
+      cursor: pointer;
+      background: #ffc107;
+      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+      overflow: visible;
+    }
+    #live-chat-widget.collapsed .chat-header {
+      height: 100%;
+      padding: 0;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 30px;
+    }
+    #live-chat-widget.collapsed .chat-header .header-info,
+    #live-chat-widget.collapsed .chat-header .header-controls,
+    #live-chat-widget.collapsed .chat-body,
+    #live-chat-widget.collapsed .chat-footer {
+      display: none;
+    }
+    #live-chat-widget.collapsed .chat-header .chat-icon {
+      font-size: 1.8rem;
+      margin: 0;
+    }
+    .chat-header {
+      background: #ffc107;
+      color: #000;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .chat-icon {
+      font-size: 2rem;
+      margin-right: 12px;
+    }
+    .header-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .header-title {
+      font-weight: bold;
+      font-size: 1.1rem;
+      line-height: 1.2;
+    }
+    .header-subtitle {
+      font-size: 0.75rem;
+      opacity: 0.8;
+    }
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-controls i {
+      cursor: pointer;
+      font-style: normal;
+      font-weight: bold;
+      font-size: 1.2rem;
+      opacity: 0.7;
+    }
+    .header-controls i:hover { opacity: 1; }
+    
+    .chat-body {
+      height: 380px;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .chat-bubble-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .chat-bubble-wrapper.user {
+      justify-content: flex-start;
+    }
+    .chat-bubble-wrapper.admin {
+      justify-content: flex-end;
+    }
+    .chat-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #ccc;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: #fff;
+    }
+    .chat-bubble {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      color: #000;
+      position: relative;
+    }
+    .chat-bubble.user {
+      background: #fff;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .chat-bubble.admin {
+      background: #ffc107;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .chat-time {
+      font-size: 0.65rem;
+      color: #9ca3af;
+      margin-top: 4px;
+      text-align: right;
+    }
+    .chat-bubble-wrapper.user .chat-time { text-align: left; }
+    
+    .chat-footer {
+      background: #fff;
+      padding: 12px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .chat-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .chat-input-row input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      outline: none;
+      background: #f9fafb;
+      color: #1f2937;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    .chat-input-row input:focus {
+      border-color: #ffc107;
+      background: #fff;
+    }
+    .chat-send-btn {
+      background: #ffc107;
+      color: #000;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      transition: transform 0.1s;
+    }
+    .chat-send-btn:active { transform: scale(0.95); }
+    .chat-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: bold;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #fff;
+    }
+    .chat-end-btn {
+      background: rgba(239,68,68,0.1);
+      color: #ef4444;
+      border: none;
+      border-radius: 12px;
+      padding: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      text-align: center;
+    }
+    .chat-end-btn:hover { background: rgba(239,68,68,0.2); }
+    .chat-user-select {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(0,0,0,0.1);
+      color: #000;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      outline: none;
+      font-family: inherit;
+      font-weight: bold;
+    }
+    .chat-empty {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ca3af;
+      font-size: 0.9rem;
+      flex-direction: column;
+      gap: 12px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+  <div class="sidebar">
+    <div class="brand">
+      <h1>🔮 DD JANG</h1>
+      <p>Admin Panel</p>
+    </div>
+    <nav>
+      <div class="nav-item active" id="nav-dashboard" onclick="showPage(this,'dashboard')"><span
+          class="icon">📊</span><span>Dashboard</span></div>
+      <div class="nav-item" id="nav-slips" onclick="showPage(this,'slips')"><span
+          class="icon">📬</span><span>Slips</span><span class="badge" id="slip-badge" style="display:none">0</span>
+      </div>
+      <div class="nav-item" id="nav-bookings" onclick="showPage(this,'bookings')"><span
+          class="icon">📅</span><span>Bookings</span><span class="badge" id="booking-badge"
+          style="display:none">0</span></div>
+      <div class="nav-item" id="nav-readers" onclick="showPage(this,'readers')"><span
+          class="icon">🔮</span><span>Readers</span></div>
+      <div class="nav-item" id="nav-vip" onclick="showPage(this,'vip')"><span class="icon">👑</span><span>VIP</span>
+      </div>
+      <div class="nav-item" id="nav-users" onclick="showPage(this,'users')"><span
+          class="icon">👥</span><span>Users</span></div>
+      <div class="nav-item" id="nav-chats" onclick="showPage(this,'chats')"><span
+          class="icon">💬</span><span>Chats</span></div>
+      <div class="nav-item" id="nav-aitraining" onclick="showPage(this,'aitraining')"><span
+          class="icon">📝</span><span>ข้อมูลสอน AI</span></div>
+      <div class="nav-item" id="nav-broadcast" onclick="showPage(this,'broadcast')"><span
+          class="icon">📢</span><span>Broadcast</span></div>
+      <div class="nav-item" id="nav-settings" onclick="showPage(this,'settings')"><span
+          class="icon">⚙️</span><span>Settings</span></div>
+    </nav>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-title">📊 Dashboard</div>
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><span class="icon">👑</span>
+          <div class="label">VIP ทั้งหมด</div>
+          <div class="value" id="stat-vip">—</div>
+        </div>
+        <div class="stat-card"><span class="icon">👥</span>
+          <div class="label">Users ทั้งหมด</div>
+          <div class="value" id="stat-users">—</div>
+        </div>
+        <div class="stat-card"><span class="icon">📬</span>
+          <div class="label">Slips รอ</div>
+          <div class="value" id="stat-pending">—</div>
+        </div>
+        <div class="stat-card"><span class="icon">🔮</span>
+          <div class="label">Readings วันนี้</div>
+          <div class="value" id="stat-readings">—</div>
+        </div>
+        <div class="stat-card"><span class="icon">💰</span>
+          <div class="label">รายได้วันนี้</div>
+          <div class="value" id="stat-today-revenue" style="color:var(--green)">—</div>
+        </div>
+        <div class="stat-card" style="background:linear-gradient(135deg, rgba(245,158,11,0.1), transparent)"><span class="icon">📈</span>
+          <div class="label">รายได้รวมทั้งหมด</div>
+          <div class="value" id="stat-total-revenue" style="color:var(--gold)">—</div>
+        </div>
+      </div>
+
+      <!-- Stripe Toggle Card -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header" style="justify-content:space-between;align-items:center">
+          <h3 style="display:flex;align-items:center;gap:10px">
+            <span>💳 Stripe Payment</span>
+            <span id="stripe-status-badge" style="font-size:.7rem;padding:3px 10px;border-radius:99px;font-weight:500"></span>
+          </h3>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span id="stripe-status-text" style="font-size:.82rem;color:#9ca3af"></span>
+            <label style="position:relative;display:inline-block;width:52px;height:28px;cursor:pointer">
+              <input type="checkbox" id="stripe-toggle" onchange="toggleStripe(this.checked)" style="opacity:0;width:0;height:0">
+              <span id="stripe-slider" style="position:absolute;inset:0;border-radius:28px;transition:.3s;background:#374151">
+                <span id="stripe-knob" style="position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.3s"></span>
+              </span>
+            </label>
+          </div>
+        </div>
+        <div style="padding:14px 20px;font-size:.8rem;color:#6b7280">
+          ⚠️ เมื่อปิด Stripe บอทจะเปลี่ยนไปใช้ <strong style="color:#e2e8f0">PromptPay QR + TrueMoney Ang Pao</strong> โดยอัตโนมัติ
+        </div>
+      </div>
+
+      <!-- Revenue Chart Card -->
+      <div class="card" style="margin-top:24px">
+        <div class="card-header" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+          <h3>📈 กราฟรายได้</h3>
+          <div style="display:flex;gap:8px">
+            <button onclick="loadChart(7)" id="chart-btn-7" class="btn btn-blue" style="padding:4px 12px;font-size:.8rem">7 วัน</button>
+            <button onclick="loadChart(30)" id="chart-btn-30" class="btn" style="padding:4px 12px;font-size:.8rem;background:#1f2937">30 วัน</button>
+            <button onclick="loadChart(90)" id="chart-btn-90" class="btn" style="padding:4px 12px;font-size:.8rem;background:#1f2937">90 วัน</button>
+          </div>
+        </div>
+        <div style="padding:20px;position:relative;height:260px">
+          <canvas id="revenue-chart"></canvas>
+          <div id="chart-empty" style="display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:.9rem">ยังไม่มีข้อมูลรายได้</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Top Services</h3>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>บริการ</th>
+              <th>ครั้ง</th>
+            </tr>
+          </thead>
+          <tbody id="top-services"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SLIPS -->
+    <div class="page" id="page-slips">
+      <div class="page-title">📬 Pending Slips
+        <select onchange="loadSlips(this.value)"
+          style="font-size:.78rem;background:#111;color:#e2e8f0;border:1px solid var(--border);border-radius:6px;padding:4px 8px;margin-left:12px">
+          <option value="pending">รอดำเนินการ</option>
+          <option value="approved">อนุมัติแล้ว</option>
+          <option value="rejected">ปฏิเสธแล้ว</option>
+        </select>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>หลักฐาน</th><th>ลูกค้า</th><th>ประเภท</th><th>ช่องทาง</th><th>เวลา</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+          <tbody id="slips-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="page" id="page-broadcast">
+      <div class="page-title">📢 Broadcast Message</div>
+      <div class="card" style="max-width:700px">
+        <div class="card-header"><h3>ส่งข้อความหาลูกค้า</h3></div>
+        <div style="padding:24px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px">
+              <label style="display:block;font-size:.85rem;color:#9ca3af;margin-bottom:8px">กลุ่มเป้าหมาย</label>
+              <select id="broadcast-target" style="width:100%;padding:10px 14px;background:#0d0d1a;border:1px solid var(--border);border-radius:8px;color:#e2e8f0;font-size:.95rem">
+                <option value="all">👥 ลูกค้าทั้งหมด</option>
+                <option value="vip">👑 เฉพาะ VIP</option>
+              </select>
+            </div>
+            <div style="flex:1;min-width:200px">
+              <label style="display:block;font-size:.85rem;color:#9ca3af;margin-bottom:8px">รูปแบบข้อความ</label>
+              <select id="broadcast-type" onchange="onBroadcastTypeChange()" style="width:100%;padding:10px 14px;background:#0d0d1a;border:1px solid var(--border);border-radius:8px;color:#e2e8f0;font-size:.95rem">
+                <option value="text">📝 ข้อความธรรมดา (Text)</option>
+                <option value="flex_ad">🎯 โฆษณา Flex Message (ตั้งค่าในหน้า Settings)</option>
+              </select>
+            </div>
+          </div>
+          
+          <div style="display:flex;gap:24px;flex-wrap:wrap" id="broadcast-editor-container">
+            <div id="broadcast-flex-ad-notice" style="display:none;width:100%;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:16px;color:#93c5fd">
+              ℹ️ ระบบจะดึงเทมเพลต <b>"🎯 โฆษณา (flex_ad)"</b> ที่คุณตั้งค่าไว้ในหน้า Settings มายิงแอดให้ลูกค้าโดยอัตโนมัติ
+            </div>
+
+            <!-- Left: Textarea -->
+            <div style="flex:1;min-width:300px;display:flex;flex-direction:column">
+              <label id="broadcast-msg-label" style="display:block;font-size:.85rem;color:#9ca3af;margin-bottom:8px">ข้อความ</label>
+              <textarea id="broadcast-message" rows="8"
+                oninput="onBroadcastInput()"
+                style="flex:1;width:100%;padding:12px 14px;background:#0d0d1a;border:1px solid var(--border);border-radius:8px;color:#e2e8f0;font-size:.95rem;resize:vertical;outline:none;transition:.2s"
+                onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"
+                placeholder="พิมพ์ข้อความที่ต้องการส่งหาลูกค้า..."></textarea>
+              <div id="broadcast-json-status" style="font-size:.75rem;margin-top:8px;min-height:18px;display:none"></div>
+            </div>
+
+            <!-- Right: Simulator (only shown if Flex) -->
+            <div id="broadcast-preview-col" style="display:none;flex-direction:column;align-items:center;">
+              <div class="phone-frame" style="transform:scale(0.85);transform-origin:top center;margin-bottom:-90px">
+                <div class="phone-notch"></div>
+                <div class="phone-header">
+                  <span style="font-size:1.2rem;cursor:pointer">〈</span>
+                  <span style="margin-left:8px">Ad Preview</span>
+                </div>
+                <div class="phone-body" id="broadcast-preview-container">
+                  <div style="text-align:center;color:#333;margin-top:40px;font-size:.85rem">รอแสดงผลพรีวิว...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <button class="btn btn-blue" onclick="sendBroadcast()" style="padding:10px 28px;font-size:.95rem">📤 ส่งข้อความ</button>
+            <span id="broadcast-status" style="font-size:.85rem;color:#6b7280"></span>
+          </div>
+          <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:12px 16px;font-size:.8rem;color:#fbbf24">
+            ⚠️ ข้อความนี้จะถูกส่งผ่าน LINE Push Message ซึ่งจะมีค่าใช้จ่ายต่อข้อความที่ส่งออก (ขึ้นอยู่กับ plan LINE ของคุณ)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-title">⚙️ ตั้งค่าระบบ</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:20px;max-width:1200px">
+        <!-- ราคา -->
+        <div class="card">
+          <div class="card-header"><h3>💰 ราคาและแพ็คเกจ</h3></div>
+          <div style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div>
+              <label style="display:block;font-size:.85rem;color:#9ca3af;margin-bottom:6px">ราคา Credit ต่อหน่วย (บาท)</label>
+              <input type="number" id="setting-credit_price" style="width:100%;padding:10px 14px;background:#0d0d1a;border:1px solid var(--border);border-radius:8px;color:#e2e8f0;font-size:.95rem" placeholder="20">
+            </div>
+            <div>
+              <label style="display:block;font-size:.85rem;color:#9ca3af;margin-bottom:6px">ราคา VIP Subscription (บาท)</label>
+              <input type="number" id="setting-subscription_price" style="width:100%;padding:10px 14px;background:#0d0d1a;border:1px solid var(--border);border-radius:8px;color:#e2e8f0;font-size:.95rem" placeholder="199">
+            </div>
+            <div>
+              <label style="display:block;font-size:.85rem;color:#9ca3af;margin-bottom:6px">จำนวนวัน VIP</label>
+              <input type="number" id="setting-vip_days" style="width:100%;padding:10px 14px;background:#0d0d1a;border:1px solid var(--border);border-radius:8px;color:#e2e8f0;font-size:.95rem" placeholder="30">
+            </div>
+          </div>
+        </div>
+        <!-- ข้อความ -->
+        <div class="card">
+          <div class="card-header"><h3>💬 ข้อความระบบ</h3></div>
+          <div style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div>
+              <label style="display:block;font-size:.85rem;color:#9ca3af;margin-bottom:6px">ข้อความต้อนรับลูกค้าใหม่</label>
+              <textarea id="setting-welcome_message" rows="4"
+                style="width:100%;padding:12px 14px;background:#0d0d1a;border:1px solid var(--border);border-radius:8px;color:#e2e8f0;font-size:.9rem;resize:vertical"
+                placeholder="ยินดีต้อนรับสู่ดีจัง..."></textarea>
+            </div>
+          </div>
+        </div>
+        <!-- ระบบ -->
+        <div class="card">
+          <div class="card-header"><h3>🛡️ ระบบ</h3></div>
+          <div style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div>
+              <label style="display:block;font-size:.85rem;color:#9ca3af;margin-bottom:6px">Rate Limit (ข้อความต่อนาทีต่อ user)</label>
+              <input type="number" id="setting-rate_limit" style="width:100%;padding:10px 14px;background:#0d0d1a;border:1px solid var(--border);border-radius:8px;color:#e2e8f0;font-size:.95rem" placeholder="15">
+            </div>
+          </div>
+        </div>
+        <!-- Flex Messages -->
+        <div class="card" style="grid-column: 1 / -1;">
+          <div class="card-header" style="flex-wrap:wrap;gap:12px">
+            <h3>🎨 Flex Messages (JSON Override)</h3>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <select id="flex-type-select" onchange="onFlexTypeChange()"
+                style="background:#0d0d1a;border:1px solid var(--border);color:#e2e8f0;border-radius:8px;padding:6px 12px;font-size:.82rem;outline:none;cursor:pointer">
+                <option value="flex_booking">📅 การจองคิว (flex_booking)</option>
+                <option value="flex_payment_menu">💳 เมนูชำระเงิน (flex_payment_menu)</option>
+                <option value="flex_payment_success">✅ ชำระเงินสำเร็จ (flex_payment_success)</option>
+                <option value="flex_rating">⭐ ขอคะแนน (flex_rating)</option>
+                <option value="flex_profile">👤 โปรไฟล์ผู้ใช้ (flex_profile)</option>
+                <option value="flex_profile_vip">👑 โปรไฟล์ VIP (flex_profile_vip)</option>
+                <option value="flex_ad">🎯 โฆษณา (flex_ad)</option>
+              </select>
+              <button class="btn btn-gold" style="padding:6px 14px;font-size:.78rem" onclick="loadFlexDefault(document.getElementById('flex-type-select').value)">🔄 โหลดค่าเริ่มต้น</button>
+              <button class="btn btn-blue" style="padding:6px 14px;font-size:.78rem" onclick="copyFlexJson()" id="flex-copy-btn">📋 Copy JSON</button>
+            </div>
+          </div>
+          <div style="padding:16px 20px 4px">
+            <p style="font-size:.78rem;color:#6b7280">วางหรือแก้ไข JSON แล้วกด <strong style="color:#e2e8f0">บันทึกการตั้งค่า</strong> — หากปล่อยว่าง บอทจะใช้หน้าตาเริ่มต้นของระบบ</p>
+          </div>
+          <div style="padding:12px 20px 20px">
+            <div style="display:flex;gap:24px;flex-wrap:wrap">
+              <!-- Left: Editor -->
+              <div style="flex:1;min-width:300px;display:flex;flex-direction:column">
+                <div id="flex-json-status" style="font-size:.75rem;margin-bottom:8px;min-height:18px"></div>
+                <textarea id="flex-json-editor" rows="22"
+                  oninput="onFlexEditorInput()"
+                  style="flex:1;width:100%;padding:14px 16px;background:#070710;border:1px solid var(--border);border-radius:10px;color:#e2e8f0;font-family:'JetBrains Mono',Consolas,monospace;font-size:.82rem;resize:vertical;line-height:1.6;outline:none;transition:.2s"
+                  onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"
+                  placeholder='{"type": "bubble", ...}'></textarea>
+              </div>
+
+              <!-- Right: Simulator Preview -->
+              <div style="display:flex;flex-direction:column;align-items:center;padding-top:20px;">
+                <div class="phone-frame">
+                  <div class="phone-notch"></div>
+                  <div class="phone-header">
+                    <span style="font-size:1.2rem;cursor:pointer">〈</span>
+                    <span style="margin-left:8px">Flex Preview</span>
+                  </div>
+                  <div class="phone-body" id="flex-preview-container">
+                    <!-- renderFlex will inject HTML here -->
+                    <div style="text-align:center;color:#333;margin-top:40px;font-size:.85rem">Loading preview...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:20px;display:flex;align-items:center;gap:16px">
+        <button class="btn btn-green" onclick="saveSettings()" style="padding:10px 28px;font-size:.95rem">💾 บันทึกการตั้งค่า</button>
+        <span id="settings-status" style="font-size:.85rem;color:#6b7280"></span>
+      </div>
+    </div>
+
+    <!-- VIP -->
+    <div class="page" id="page-vip">
+      <div class="page-title">👑 จัดการ VIP
+        <button class="btn btn-gold" onclick="openModal('modal-add-vip')" style="margin-left:12px">+ เพิ่ม VIP</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>หมดอายุ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="vip-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="page" id="page-bookings">
+      <div class="page-title" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span>📅 จัดการคิวจอง</span>
+        <select onchange="loadBookings(this.value)" id="booking-filter"
+          style="font-size:.78rem;background:#0d0d1a;color:#e2e8f0;border:1px solid var(--border);border-radius:8px;padding:6px 10px;outline:none">
+          <option value="all">📄 ทั้งหมด</option>
+          <option value="pending">⏳ รอยืนยัน</option>
+          <option value="confirmed">✅ ยืนยันแล้ว</option>
+          <option value="rejected">❌ ปฏิเสธ</option>
+          <option value="completed">🌟 เสร็จสิ้น</option>
+        </select>
+        <span id="booking-count-label"
+          style="font-size:.78rem;color:#6b7280;background:rgba(255,255,255,.06);padding:4px 10px;border-radius:99px"></span>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>ลูกค้า</th>
+              <th>วันที่ต้องการ</th>
+              <th>ประเภท</th>
+              <th>สถานะ</th>
+              <th>วันนัดยืนยัน</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="bookings-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- READERS -->
+    <div class="page" id="page-readers">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+        <div class="page-title" style="margin-bottom:0">🔮 จัดการหมอดู</div>
+        <button class="btn btn-blue" onclick="openModal('modal-add-reader')" style="font-size:0.9rem">➕
+          สร้างหมอดูใหม่</button>
+      </div>
+    <div id="readers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px">
+      </div>
+
+      <!-- Unassigned users -->
+      <div style="margin-top:32px">
+        <div style="font-size:.8rem;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+          <span>👤 ลูกค้าที่ยังไม่มีหมอดูดูแล</span>
+          <span id="unassigned-count" style="background:rgba(239,68,68,.15);color:#f87171;border-radius:99px;padding:2px 10px;font-size:.72rem"></span>
+        </div>
+        <div id="unassigned-users-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px"></div>
+      </div>
+
+      <!-- Booking System Customers -->
+      <div style="margin-top:40px">
+        <div style="font-size:.8rem;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+          <span>📋 ลูกค้าที่ใช้ระบบจองตัวทั้งหมด</span>
+          <span id="booking-customers-count" style="background:rgba(59,130,246,.15);color:var(--blue);border-radius:99px;padding:2px 10px;font-size:.72rem">0 คน</span>
+        </div>
+        <div class="card" style="margin-bottom:24px; overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>ลูกค้า</th>
+                <th style="text-align:center">จำนวนครั้งที่จอง</th>
+                <th style="text-align:center">ดูเสร็จสิ้นแล้ว</th>
+                <th>จองล่าสุดเมื่อ</th>
+                <th>ยอด Credit คงเหลือ</th>
+                <th>สถานะ VIP</th>
+              </tr>
+            </thead>
+            <tbody id="booking-customers-table">
+              <!-- rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="page-title">👥 ผู้ใช้ทั้งหมด</div>
+      <div class="card">
+        <div class="card-header">
+          <h3 id="user-count-label">ผู้ใช้</h3>
+          <input placeholder="ค้นหา User ID..." oninput="filterUsers(this.value)"
+            style="background:#0d0d1a;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:#e2e8f0;font-size:.78rem;outline:none;width:240px">
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ลูกค้า</th>
+              <th>Credit</th>
+              <th>สถานะ</th>
+              <th>Readings</th>
+              <th>หมอดูดูแล</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="users-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CHATS -->
+    <div class="page" id="page-chats">
+      <div class="page-title" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span>💬 ประวัติแชท</span>
+        <input id="chat-search" placeholder="🔍 ค้นหา User ID..." oninput="filterChatUsers(this.value)"
+          style="font-size:.78rem;background:#0d0d1a;color:#e2e8f0;border:1px solid var(--border);border-radius:8px;padding:7px 12px;outline:none;width:240px;transition:.2s"
+          onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'">
+        <span id="chat-user-count"
+          style="font-size:.78rem;color:#6b7280;background:rgba(255,255,255,.06);padding:4px 10px;border-radius:99px"></span>
+      </div>
+      <div id="chat-users-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+      </div>
+    </div>
+
+    <!-- AI TRAINING -->
+    <div class="page" id="page-aitraining">
+      <div class="page-title" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span>📝 ข้อมูลสอน AI (Training Data)</span>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>เวลา</th>
+              <th>ลูกค้า</th>
+              <th>เรื่อง / ไพ่ที่ได้</th>
+              <th>คำถาม</th>
+              <th>คะแนน</th>
+              <th width="100">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tb-aitraining"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="modal-chat-detail">
+    <div class="modal"
+      style="min-width:600px;max-width:92vw;width:680px;max-height:88vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+      <!-- Header -->
+      <div class="chat-modal-header" id="chat-modal-header">
+        <div class="chat-modal-avatar" id="chat-modal-avatar"
+          style="background:linear-gradient(135deg,#3b82f6,#7c3aed)">👤</div>
+        <div style="flex:1;min-width:0">
+          <div id="chat-detail-name-label" style="font-size:.72rem;color:#9ca3af;margin-bottom:2px">LINE User ID</div>
+          <div id="chat-detail-uid"
+            style="font-family:monospace;font-size:.82rem;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          </div>
+          <div id="chat-detail-meta" style="font-size:.68rem;color:#6b7280;margin-top:3px"></div>
+        </div>
+        <button class="btn btn-red" onclick="closeModal('modal-chat-detail')" style="flex-shrink:0">✕ ปิด</button>
+      </div>
+      <!-- Chat body -->
+      <div id="chat-detail-body"
+        style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;padding:16px 20px;background:#0a0a14">
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-add-vip">
+    <div class="modal">
+      <h3>👑 เพิ่ม VIP</h3>
+      <div class="form-group"><label>LINE User ID</label><input id="vip-userid" placeholder="Uxxxxxxxx..."></div>
+      <div class="form-group"><label>ระยะเวลา (เดือน)</label><input id="vip-months" type="number" value="1" min="1">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-red" onclick="closeModal('modal-add-vip')">ยกเลิก</button>
+        <button class="btn btn-green" onclick="submitAddVip()">✅ เพิ่ม VIP</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-approve-credit">
+    <div class="modal">
+      <h3>✅ Approve Credit Slip</h3>
+      <div id="approve-modal-note"
+        style="font-size:.78rem;color:#fb923c;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:8px;padding:10px 12px;margin-bottom:14px;display:none"></div>
+      <div class="form-group"><label>จำนวนเครดิต (บาท)</label><input id="approve-amount" type="number" min="1"
+          placeholder="20"></div>
+      <div class="modal-actions">
+        <button class="btn btn-red" onclick="closeModal('modal-approve-credit')">ยกเลิก</button>
+        <button class="btn btn-green" onclick="submitApproveCredit()">✅ Approve</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOKING CONFIRM MODAL -->
+  <div class="modal-overlay" id="modal-confirm-booking">
+    <div class="modal">
+      <h3>✅ ยืนยันการจอง</h3>
+      <div class="form-group"><label>📅 วันเวลาที่นัดหมาย (ส่งให้ลูกค้า)</label><input id="booking-confirmed-date"
+          placeholder="เช่น เสาร์ที่ 10 พ.ค. เวลา 14:00 น."></div>
+      <div class="form-group"><label>💬 ข้อความเพิ่มเติม (ถ้ามี)</label><input id="booking-confirm-note"
+          placeholder="เช่น กรุณาเตรียม..."></div>
+      <div class="modal-actions">
+        <button class="btn btn-red" onclick="closeModal('modal-confirm-booking')">ยกเลิก</button>
+        <button class="btn btn-green" onclick="submitConfirmBooking()">✅ ยืนยัน + แจ้ง LINE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOKING REJECT MODAL -->
+  <div class="modal-overlay" id="modal-reject-booking">
+    <div class="modal">
+      <h3>❌ ปฏิเสธการจอง</h3>
+      <div class="form-group"><label>💬 เหตุผล (จะส่งให้ลูกค้าทาง LINE)</label><input id="booking-reject-note"
+          placeholder="เช่น ไม่ว่างช่วงนั้น กรุณาจองวันใหม่..."></div>
+      <div class="modal-actions">
+        <button class="btn btn-red" onclick="closeModal('modal-reject-booking')">ยกเลิก</button>
+        <button class="btn btn-red" onclick="submitRejectBooking()">❌ ปฏิเสธ + แจ้ง LINE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD READER MODAL -->
+  <div class="modal-overlay" id="modal-add-reader">
+    <div class="modal">
+      <h3>🔮 เพิ่มหมอดูใหม่</h3>
+      <div class="form-group"><label>Username (ใช้ล็อกอินหน้า /reader)</label><input id="reader-username"
+          placeholder="เช่น ajarn.a"></div>
+      <div class="form-group"><label>Password</label><input id="reader-password" placeholder="ตั้งรหัสผ่าน"></div>
+      <div class="form-group"><label>ชื่อที่แสดง (Name)</label><input id="reader-name" placeholder="เช่น อ.เอก"></div>
+      <div class="modal-actions">
+        <button class="btn btn-red" onclick="closeModal('modal-add-reader')">ยกเลิก</button>
+        <button class="btn btn-green" onclick="submitAddReader()">✅ สร้างหมอดู</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASSIGN READER MODAL -->
+  <div class="modal-overlay" id="modal-assign-reader">
+    <div class="modal">
+      <h3>👥 มอบหมายหมอดูดูแลลูกค้า</h3>
+      <div style="font-size:0.8rem;color:#9ca3af;margin-bottom:12px;font-family:monospace" id="assign-user-id"></div>
+      <div class="form-group">
+        <label>เลือกหมอดู</label>
+        <select id="assign-reader-select"
+          style="width:100%;padding:10px;background:#0d0d1a;border:1px solid var(--border);color:white;border-radius:8px">
+          <!-- options -->
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-red" onclick="closeModal('modal-assign-reader')">ยกเลิก</button>
+        <button class="btn btn-green" onclick="submitAssignReader()">✅ บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD USER TO READER MODAL -->
+  <div class="modal-overlay" id="modal-add-user-to-reader">
+    <div class="modal">
+      <h3>➕ มอบหมายลูกค้าให้ <span id="add-user-reader-name" style="color:var(--gold)"></span></h3>
+      <div class="form-group"><label>LINE User ID ของลูกค้า</label><input id="add-user-userid-input" placeholder="Uxxxxxxxx..."></div>
+      <div class="modal-actions">
+        <button class="btn btn-red" onclick="closeModal('modal-add-user-to-reader')">ยกเลิก</button>
+        <button class="btn btn-green" onclick="submitAddUserToReader()">✅ บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- READER HISTORY MODAL -->
+  <div class="modal-overlay" id="modal-reader-history">
+    <div class="modal" style="min-width:680px; max-width:92vw; width:720px; max-height:88vh; display:flex; flex-direction:column; padding:0; overflow:hidden">
+      <div class="chat-modal-header" style="background: linear-gradient(135deg, var(--blue), var(--gold))">
+        <div class="chat-modal-avatar">📂</div>
+        <div style="flex:1">
+          <h3 style="margin:0; font-size:1.1rem; color:white">ประวัติการให้บริการดูดวง</h3>
+          <p id="reader-history-title" style="margin:4px 0 0 0; font-size:0.8rem; color:rgba(255,255,255,0.8)"></p>
+        </div>
+        <button class="btn btn-red" onclick="closeModal('modal-reader-history')" style="flex-shrink:0">✕ ปิด</button>
+      </div>
+      <div style="overflow-y:auto; flex:1; padding:20px; background:#0a0a14">
+        <table>
+          <thead>
+            <tr>
+              <th>ลูกค้า</th>
+              <th style="text-align:center">ดูเสร็จสิ้น (ครั้ง)</th>
+              <th>สถานะ VIP</th>
+              <th>Credit คงเหลือ</th>
+              <th>ให้บริการล่าสุดเมื่อ</th>
+            </tr>
+          </thead>
+          <tbody id="reader-history-table-body">
+            <!-- records -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" onclick="this.classList.remove('open')">
+    <img id="lightbox-img" src="">
+  </div>
+
+  <!-- Modal: AI Detail -->
+  <div class="modal" id="modal-ai-detail">
+    <div class="modal-box" style="max-width:500px">
+      <div class="modal-header">
+        <h3 style="font-size:1.1rem">รายละเอียดคำทำนาย</h3>
+        <button class="modal-close" onclick="closeModal('modal-ai-detail')">×</button>
+      </div>
+      <div class="modal-body" style="font-size:0.9rem; line-height:1.5;">
+        <div style="margin-bottom:12px"><strong>เรื่อง:</strong> <span id="ai-modal-topic" style="color:#f59e0b"></span></div>
+        <div style="margin-bottom:12px"><strong>คะแนนรีวิว:</strong> <span id="ai-modal-rating"></span></div>
+        <div style="margin-bottom:12px; background:var(--bg); padding:10px; border-radius:8px">
+          <strong style="color:#94a3b8">คำถาม (Prompt):</strong><br>
+          <div id="ai-modal-prompt" style="margin-top:6px; white-space:pre-wrap; color:var(--text)"></div>
+        </div>
+        <div style="background:var(--bg); padding:10px; border-radius:8px">
+          <strong style="color:#10b981">คำทำนาย (Response):</strong><br>
+          <div id="ai-modal-response" style="margin-top:6px; white-space:pre-wrap; color:var(--text)"></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content:flex-end">
+        <button class="btn btn-red" onclick="closeModal('modal-ai-detail')">ปิด</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSlipId = null;
+    let allUsers = [];
+    let availableReaders = [];
+
+    // ── Navigation ─────────────────────────────────────
+    let currentPage = 'dashboard';
+    let pollingInterval = null;
+
+    function showPage(el, name) {
+      currentPage = name;
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + name).classList.add('active');
+      el.classList.add('active');
+      refreshCurrentPage();
+    }
+
+    function refreshCurrentPage() {
+      if (currentPage === 'dashboard') loadDashboard();
+      if (currentPage === 'slips') loadSlips(document.querySelector('.slip-tab.active')?.dataset.type || 'pending');
+      if (currentPage === 'vip') loadVIPs();
+      if (currentPage === 'users') loadUsers();
+      if (currentPage === 'chats') loadChats();
+      if (currentPage === 'aitraining') loadAITraining();
+      if (currentPage === 'bookings') loadBookings(document.querySelector('.booking-tab.active')?.dataset.type || 'all');
+      if (currentPage === 'readers') loadReaders();
+      if (currentPage === 'settings') loadSettings();
+    }
+
+    // Polling every 15 seconds to keep data real-time without refreshing
+    if (pollingInterval) clearInterval(pollingInterval);
+    pollingInterval = setInterval(() => {
+      if (!document.hidden && ['dashboard', 'slips', 'bookings'].includes(currentPage)) {
+        refreshCurrentPage();
+      }
+    }, 15000);
+
+    // ── Modal ───────────────────────────────────────────
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+
+    // ── Lightbox ────────────────────────────────────────
+    function openLightbox(src) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox').classList.add('open');
+    }
+
+    // ── Helpers ─────────────────────────────────────────
+    function esc(s) { return s ? s.toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;') : ''; }
+    function parseMessageContent(text) {
+      if (!text) return '';
+      let safeText = esc(text);
+      if (text.includes('[IMAGE: ')) {
+        safeText = text.replace(/\[IMAGE: ([^\]]+)\]/g, (match, imgUrl) => {
+          return `<a href="${imgUrl}" target="_blank"><img src="${imgUrl}" style="max-width: 100%; border-radius: 8px; cursor: zoom-in; display: block; margin-top: 4px; margin-bottom: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></a>`;
+        });
+      }
+      return safeText;
+    }
+    async function api(method, path, body) {
+      const r = await fetch('/admin' + path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+      return r.json();
+    }
+    function fmtDate(s) { return s ? new Date(s).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function isVIPActive(exp) { return exp && new Date(exp) > new Date(); }
+
+    // ── Dashboard ────────────────────────────────────────
+    async function loadDashboard() {
+      const d = await api('GET', '/api/stats');
+      document.getElementById('stat-vip').textContent = d.vipCount;
+      document.getElementById('stat-users').textContent = d.userCount;
+      document.getElementById('stat-pending').textContent = d.pendingCount;
+      document.getElementById('stat-readings').textContent = d.todayReadings;
+      document.getElementById('stat-today-revenue').textContent = (d.todayRevenue || 0).toLocaleString() + ' ฿';
+      document.getElementById('stat-total-revenue').textContent = (d.totalRevenue || 0).toLocaleString() + ' ฿';
+      updateStripeToggleUI(d.stripeEnabled);
+      if (d.pendingCount > 0) {
+        document.getElementById('slip-badge').textContent = d.pendingCount;
+        document.getElementById('slip-badge').style.display = '';
+      }
+      const tb = document.getElementById('top-services');
+      tb.innerHTML = (d.topServices || []).map(s => `<tr><td>${s.service}</td><td><strong>${s.count}</strong></td></tr>`).join('');
+      // booking badge
+      try {
+        const bc = await api('GET', '/api/bookings/count');
+        const badge = document.getElementById('booking-badge');
+        if (bc.count > 0) { badge.textContent = bc.count; badge.style.display = ''; }
+        else { badge.style.display = 'none'; }
+      } catch (_) { }
+    }
+
+    function updateStripeToggleUI(enabled) {
+      const toggle = document.getElementById('stripe-toggle');
+      const badge = document.getElementById('stripe-status-badge');
+      const text = document.getElementById('stripe-status-text');
+      const slider = document.getElementById('stripe-slider');
+      const knob = document.getElementById('stripe-knob');
+      if (!toggle) return;
+      toggle.checked = !!enabled;
+      if (enabled) {
+        badge.textContent = '✅ เปิดใช้งาน';
+        badge.style.cssText = 'font-size:.7rem;padding:3px 10px;border-radius:99px;font-weight:500;background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)';
+        text.textContent = 'บอทใช้ Stripe เป็น payment หลัก';
+        slider.style.background = '#059669';
+        knob.style.left = '27px';
+      } else {
+        badge.textContent = '🔴 ปิดอยู่ (ใช้ PromptPay)';
+        badge.style.cssText = 'font-size:.7rem;padding:3px 10px;border-radius:99px;font-weight:500;background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)';
+        text.textContent = 'บอทใช้ PromptPay + Ang Pao แทน';
+        slider.style.background = '#374151';
+        knob.style.left = '3px';
+      }
+    }
+
+    async function toggleStripe(enabled) {
+      try {
+        const r = await api('POST', '/api/settings/stripe', { enabled });
+        updateStripeToggleUI(r.enabled);
+      } catch (err) {
+        alert('เกิดข้อผิดพลาด: ' + err.message);
+        document.getElementById('stripe-toggle').checked = !enabled;
+      }
+    }
+
+    // ── Slips ────────────────────────────────────────────
+    async function loadSlips(status) {
+      const slips = await api('GET', '/api/slips?status=' + status);
+      const tb = document.getElementById('slips-table');
+      if (!slips.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:24px">ไม่มีรายการ</td></tr>'; return; }
+      tb.innerHTML = slips.map(s => {
+        const isAngPao = s.payment_method === 'angpao';
+        const isStripe = s.payment_method === 'stripe';
+        
+        let evidenceCell = '';
+        if (isAngPao) {
+          evidenceCell = `<td>
+               <a href="${esc(s.angpao_link || '')}" target="_blank" rel="noopener"
+                  style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(249,115,22,.15);color:#fb923c;border:1px solid rgba(249,115,22,.3);border-radius:8px;font-size:.76rem;text-decoration:none;transition:.2s"
+                  onmouseover="this.style.background='rgba(249,115,22,.25)'" onmouseout="this.style.background='rgba(249,115,22,.15)'">
+                 🧧 เปิดลิงก์ซอง
+               </a>
+             </td>`;
+        } else if (isStripe) {
+          evidenceCell = `<td><span style="color:#6b7280;font-size:0.8rem">✅ Auto-verified</span></td>`;
+        } else {
+          evidenceCell = `<td><img class="slip-img" src="/public/slips/${s.filename}" onclick="openLightbox('/public/slips/${s.filename}')" onerror="this.style.display='none'"></td>`;
+        }
+
+        let channelCell = '';
+        if (isAngPao) {
+          channelCell = `<td><span class="tag tag-angpao">🧧 TrueMoney</span></td>`;
+        } else if (isStripe) {
+          channelCell = `<td><span class="tag tag-stripe">💳 Stripe</span></td>`;
+        } else {
+          channelCell = `<td><span style="font-size:.75rem;color:#9ca3af">📸 PromptPay</span></td>`;
+        }
+
+        return `
+    <tr>
+      ${evidenceCell}
+      <td>
+        <div style="font-weight:600;font-size:.78rem;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px" title="${s.line_name ? esc(s.line_name) : s.user_id}">${s.line_name ? esc(s.line_name) : '—'}</div>
+        <div style="font-family:monospace;font-size:.65rem;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px" title="${s.user_id}">${s.user_id}</div>
+      </td>
+      <td><span class="tag ${s.slip_type === 'subscription' ? 'tag-vip' : 'tag-normal'}">${s.slip_type === 'subscription' ? '👑 VIP' : '💎 Credit'}</span></td>
+      ${channelCell}
+      <td style="font-size:.72rem;color:#6b7280">${fmtDate(s.created_at)}</td>
+      <td><span class="tag tag-${s.status}">${s.status}</span></td>
+      <td style="display:flex;gap:6px">
+        ${s.status === 'pending' ? `
+          <button class="btn btn-green" onclick="approveSlip(${s.id},'${s.slip_type}','${s.payment_method || 'slip'}')">✅</button>
+          <button class="btn btn-red" onclick="rejectSlip(${s.id})">❌</button>
+        ` : '—'}
+      </td>
+    </tr>`;
+      }).join('');
+    }
+
+    function approveSlip(id, type, method) {
+      currentSlipId = id;
+      const isAngPao = method === 'angpao';
+      const channelNote = isAngPao ? '\n\n🧧 ช่องทาง: TrueMoney Ang Pao (เปิดลิงก์ด้วยมือก่อนกด Approve)' : '';
+      if (type === 'subscription') {
+        if (!confirm('อนุมัติ VIP Subscription?' + channelNote)) return;
+        api('POST', '/api/slips/' + id + '/approve', {}).then(r => { alert(r.message || r.error); loadSlips('pending'); loadDashboard(); });
+      } else {
+        document.getElementById('approve-amount').value = '20';
+        const noteEl = document.getElementById('approve-modal-note');
+        if (isAngPao) {
+          noteEl.textContent = '🧧 TrueMoney Ang Pao — ตรวจสอบยอดในแอปก่อนกด Approve';
+          noteEl.style.display = '';
+        } else {
+          noteEl.textContent = '';
+          noteEl.style.display = 'none';
+        }
+        openModal('modal-approve-credit');
+      }
+    }
+    function submitApproveCredit() {
+      const amount = parseInt(document.getElementById('approve-amount').value);
+      api('POST', '/api/slips/' + currentSlipId + '/approve', { amount }).then(r => { alert(r.message || r.error); closeModal('modal-approve-credit'); loadSlips('pending'); loadDashboard(); });
+    }
+    function rejectSlip(id) {
+      if (!confirm('ปฏิเสธ Slip นี้?')) return;
+      api('POST', '/api/slips/' + id + '/reject', {}).then(r => { loadSlips('pending'); loadDashboard(); });
+    }
+
+    // ── BOOKINGS ────────────────────────────────────────
+    async function loadBookings(status = 'all') {
+      document.getElementById('booking-filter').value = status;
+      const bookings = await api('GET', `/api/bookings?status=${status}`);
+      const tb = document.getElementById('bookings-table');
+      if (!bookings.length) {
+        tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:24px">ไม่มีข้อมูลคิวจอง</td></tr>';
+        document.getElementById('booking-count-label').textContent = '0 คิว';
+        return;
+      }
+      document.getElementById('booking-count-label').textContent = `${bookings.length} คิว`;
+      tb.innerHTML = bookings.map(b => {
+        let badge = '', actions = '';
+        if (b.status === 'pending') {
+          badge = '<span class="status-badge bg-yellow">รอ</span>';
+          actions = `<button class="btn btn-blue" style="padding:4px 8px;font-size:.7rem" onclick="confirmBooking(${b.id})">✅ รับ</button>
+                     <button class="btn btn-red" style="padding:4px 8px;font-size:.7rem" onclick="rejectBooking(${b.id})">❌ ปฏิเสธ</button>`;
+        } else if (b.status === 'confirmed') {
+          badge = '<span class="status-badge bg-blue">ยืนยันแล้ว</span>';
+          actions = `<button class="btn btn-green" style="padding:4px 8px;font-size:.7rem" onclick="completeBooking(${b.id})">🌟 เสร็จสิ้น</button>`;
+        } else if (b.status === 'completed') {
+          badge = '<span class="status-badge bg-green">เสร็จสิ้น</span>';
+        } else {
+          badge = '<span class="status-badge bg-red">ปฏิเสธ</span>';
+        }
+        
+        let typeBadge = '';
+        if (b.booking_type === 'online') typeBadge = '<span class="status-badge bg-blue">ออนไลน์</span>';
+        else typeBadge = '<span class="status-badge bg-purple">เจอตัว</span>';
+
+        return `<tr>
+          <td style="font-size:.75rem;color:#6b7280">#${b.id}</td>
+          <td>
+            <div style="font-weight:600">${b.line_name || 'Unknown'}</div>
+            <div style="font-size:.7rem;color:#6b7280">${b.user_id}</div>
+          </td>
+          <td>${b.preferred_date}</td>
+          <td>${typeBadge}</td>
+          <td>${badge}</td>
+          <td>${b.confirmed_date || '-'}</td>
+          <td><div style="display:flex;gap:6px;justify-content:center">${actions}</div></td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function confirmBooking(id) {
+      const confirmedDate = prompt('กำหนดวัน/เวลานัดหมายให้ลูกค้า (เช่น 20 พ.ค. 14:00)');
+      if (!confirmedDate) return;
+      await api('POST', `/api/bookings/${id}/confirm`, { confirmedDate });
+      loadBookings(document.getElementById('booking-filter').value);
+      loadDashboard();
+    }
+    
+    async function rejectBooking(id) {
+      if (!confirm('ยืนยันปฏิเสธคิวจองนี้?')) return;
+      await api('POST', `/api/bookings/${id}/reject`, {});
+      loadBookings(document.getElementById('booking-filter').value);
+      loadDashboard();
+    }
+    
+    async function completeBooking(id) {
+      if (!confirm('ยืนยันเสร็จสิ้นคิวจองนี้? (จบการดูดวงแล้ว)')) return;
+      await api('POST', `/api/bookings/${id}/complete`, {});
+      loadBookings(document.getElementById('booking-filter').value);
+      loadDashboard();
+    }
+
+    // ── VIP ─────────────────────────────────────────────
+    async function loadVIPs() {
+      const vips = await api('GET', '/api/vip');
+      const tb = document.getElementById('vip-table');
+      if (!vips.length) { tb.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#6b7280;padding:24px">ไม่มี VIP</td></tr>'; return; }
+      tb.innerHTML = vips.map(v => `
+    <tr>
+      <td style="font-family:monospace;font-size:.75rem">${v.user_id}</td>
+      <td>${fmtDate(v.subscription_expires_at)}</td>
+      <td><button class="btn btn-red" onclick="removeVIP('${v.user_id}')">🗑️ ลบ</button></td>
+    </tr>`).join('');
+    }
+    function submitAddVip() {
+      const userId = document.getElementById('vip-userid').value.trim();
+      const months = parseInt(document.getElementById('vip-months').value);
+      if (!userId) return alert('กรุณาระบุ User ID');
+      api('POST', '/api/vip/add', { userId, months }).then(r => { alert(r.message || r.error); closeModal('modal-add-vip'); loadVIPs(); });
+    }
+    function removeVIP(userId) {
+      if (!confirm('ลบ VIP ของ ' + userId + '?')) return;
+      api('POST', '/api/vip/remove', { userId }).then(r => { alert(r.message || r.error); loadVIPs(); });
+    }
+
+    // ── Credits ──────────────────────────────────────────
+    async function addCredits() {
+      const userId = document.getElementById('credit-userid').value.trim();
+      const amount = parseInt(document.getElementById('credit-amount').value);
+      if (!userId || !amount) return alert('กรุณากรอกข้อมูลให้ครบ');
+      const r = await api('POST', '/api/credits/add', { userId, amount });
+      const el = document.getElementById('credit-result');
+      el.style.color = r.success ? 'var(--green)' : 'var(--red)';
+      el.textContent = r.message || r.error;
+      if (r.success) loadCreditHistory(userId);
+    }
+    async function loadCreditHistory(userId) {
+      const r = await api('GET', '/api/users/' + userId);
+      const card = document.getElementById('credit-history-card');
+      card.style.display = '';
+      const tb = document.getElementById('credit-history');
+      tb.innerHTML = (r.transactions || []).map(t => `<tr><td>${t.type}</td><td style="color:${t.amount > 0 ? 'var(--green)' : 'var(--red)'}">${t.amount > 0 ? '+' : ''}${t.amount}</td><td style="color:#6b7280">${t.note || '—'}</td><td style="font-size:.72rem;color:#6b7280">${fmtDate(t.created_at)}</td></tr>`).join('');
+    }
+
+    // ── Users ────────────────────────────────────────────
+    async function loadUsers() {
+      const r = await api('GET', '/api/users?limit=200');
+      allUsers = r.users || [];
+
+      if (availableReaders.length === 0) {
+        try {
+          availableReaders = await api('GET', '/api/readers');
+        } catch (e) { console.error(e); }
+      }
+
+      document.getElementById('user-count-label').textContent = `ผู้ใช้ทั้งหมด ${r.total} คน`;
+      renderUsers(allUsers);
+    }
+    function renderUsers(users) {
+      const tb = document.getElementById('users-table');
+      tb.innerHTML = users.map(u => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${u.line_picture ? `<img src="${u.line_picture}" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border)">` : `<div style="width:32px;height:32px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#6b7280">👤</div>`}
+          <div style="min-width:0">
+            <div style="font-weight:600;font-size:.85rem;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="${esc(u.line_name)}">${u.line_name ? esc(u.line_name) : '—'}</div>
+            <div style="font-family:monospace;font-size:.65rem;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="${u.user_id}">${u.user_id}</div>
+          </div>
+        </div>
+      </td>
+      <td>${u.credit} ฿</td>
+      <td><span class="tag ${isVIPActive(u.subscription_expires_at) ? 'tag-vip' : 'tag-normal'}">${isVIPActive(u.subscription_expires_at) ? '👑 VIP' : 'ทั่วไป'}</span></td>
+      <td>${u.total_readings}</td>
+      <td style="font-size:.75rem;color:${u.assigned_reader_id ? 'var(--blue)' : '#6b7280'}">${u.reader_name ? '👩‍🔮 ' + esc(u.reader_name) : '—'}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-blue" onclick="openAssignReader('${u.user_id}', ${u.assigned_reader_id || 'null'})">👤 มอบหมาย</button>
+        <button class="btn btn-gold" onclick="quickAddCredit('${u.user_id}')">+ Credit</button>
+        ${!isVIPActive(u.subscription_expires_at) ? `<button class="btn btn-gold" onclick="quickAddVIP('${u.user_id}')">+ VIP</button>` : ''}
+      </td>
+    </tr>`).join('');
+    }
+    function filterUsers(q) { renderUsers(q ? allUsers.filter(u => u.user_id.includes(q)) : allUsers); }
+    function quickAddCredit(userId) {
+      const n = prompt('เพิ่มกี่ credit ให้ ' + userId + '?', '20');
+      if (!n) return;
+      api('POST', '/api/credits/add', { userId, amount: parseInt(n) }).then(r => { alert(r.message || r.error); loadUsers(); });
+    }
+    function quickAddVIP(userId) {
+      if (!confirm('เพิ่ม VIP 1 เดือนให้ ' + userId + '?')) return;
+      api('POST', '/api/vip/add', { userId, months: 1 }).then(r => { alert(r.message || r.error); loadUsers(); });
+    }
+
+    // ── Chats ─────────────────────────────────────────────
+    let allChatUsers = [];
+
+    // Avatar color palette — assign consistent color per user
+    const AVATAR_COLORS = [
+      ['#3b82f6', '#7c3aed'], ['#10b981', '#0d9488'], ['#f59e0b', '#ef4444'],
+      ['#ec4899', '#8b5cf6'], ['#06b6d4', '#3b82f6'], ['#f97316', '#fbbf24'],
+      ['#6366f1', '#ec4899'], ['#14b8a6', '#22d3ee'],
+    ];
+    function avatarGradient(userId) {
+      let h = 0;
+      for (let i = 0; i < userId.length; i++) h = (h * 31 + userId.charCodeAt(i)) & 0xffff;
+      const [c1, c2] = AVATAR_COLORS[h % AVATAR_COLORS.length];
+      return `linear-gradient(135deg,${c1},${c2})`;
+    }
+    function avatarLabel(userId) {
+      // Use last 2 chars of the LINE uid as a short label
+      return userId.slice(-2).toUpperCase();
+    }
+
+    async function loadChats() {
+      const chats = await api('GET', '/api/chats?limit=500');
+      const map = new Map();
+      for (const c of chats) {
+        if (!map.has(c.user_id)) {
+          map.set(c.user_id, { user_id: c.user_id, count: 0, last_msg: '', last_at: c.created_at });
+        }
+        const u = map.get(c.user_id);
+        u.count++;
+        if (!u.last_msg) u.last_msg = c.message;
+        if (c.created_at > u.last_at) u.last_at = c.created_at;
+      }
+      allChatUsers = [...map.values()].sort((a, b) => b.last_at.localeCompare(a.last_at));
+      document.getElementById('chat-user-count').textContent = `${allChatUsers.length} ผู้ใช้`;
+      renderChatUsers(allChatUsers);
+    }
+
+    function renderChatUsers(users) {
+      const grid = document.getElementById('chat-users-grid');
+      if (!users.length) {
+        grid.innerHTML = '<div style="color:#6b7280;text-align:center;padding:48px;grid-column:1/-1;font-size:.9rem">💬 ยังไม่มีประวัติแชท</div>';
+        return;
+      }
+      grid.innerHTML = users.map(u => {
+        const grad = avatarGradient(u.user_id);
+        const lbl = avatarLabel(u.user_id);
+        const preview = esc(u.last_msg.substring(0, 55)) + (u.last_msg.length > 55 ? '…' : '');
+        
+        // Find user profile from allUsers if available
+        const profile = allUsers.find(au => au.user_id === u.user_id);
+        const name = profile && profile.line_name ? profile.line_name : 'ผู้ใช้งาน';
+        const pic = profile && profile.line_picture ? profile.line_picture : null;
+
+        return `
+    <div class="chat-user-card" onclick="openChatDetail('${u.user_id}')">
+      <div class="chat-card-header">
+        ${pic ? `<img src="${pic}" class="chat-avatar" style="border:1px solid var(--border)">` : `<div class="chat-avatar" style="background:${grad}">${lbl}</div>`}
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:.85rem;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(name)}">${esc(name)}</div>
+          <div style="font-family:monospace;font-size:.65rem;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px" title="${u.user_id}">${u.user_id}</div>
+        </div>
+        <span style="background:rgba(59,130,246,.15);color:var(--blue);font-size:.65rem;border-radius:99px;padding:2px 8px;flex-shrink:0;border:1px solid rgba(59,130,246,.2)">${u.count} แชท</span>
+      </div>
+      <div class="chat-card-body">
+        <div style="font-size:.75rem;color:#9ca3af;line-height:1.5;min-height:2.4em">💬 ${preview || '<em style="color:#4b5563">—</em>'}</div>
+      </div>
+      <div class="chat-card-footer">
+        <button class="btn btn-blue" style="font-size:.7rem;padding:4px 10px;" onclick="event.stopPropagation(); openAssignReader('${u.user_id}', null)">👤 มอบหมายหมอดู</button>
+        <span style="font-size:.72rem;color:var(--blue)">ดูแชท →</span>
+      </div>
+    </div>`;
+      }).join('');
+    }
+
+    function filterChatUsers(q) { renderChatUsers(q ? allChatUsers.filter(u => u.user_id.toLowerCase().includes(q.toLowerCase())) : allChatUsers); }
+
+    async function openChatDetail(userId) {
+      // Find user profile from allUsers if available
+      const profile = allUsers.find(au => au.user_id === userId);
+      const pic = profile && profile.line_picture ? profile.line_picture : null;
+      
+      // Calculate initials from name
+      let lbl = '';
+      if (profile && profile.line_name) {
+        const parts = profile.line_name.trim().split(/\s+/);
+        if (parts.length > 1) {
+          lbl = (parts[0][0] + parts[1][0]).toUpperCase();
+        } else {
+          lbl = parts[0].substring(0, 2).toUpperCase();
+        }
+      } else {
+        lbl = userId.slice(-2).toUpperCase();
+      }
+      
+      const grad = avatarGradient(userId);
+      const avatarEl = document.getElementById('chat-modal-avatar');
+      
+      // Render avatar
+      if (pic) {
+        avatarEl.style.background = 'none';
+        avatarEl.style.border = '1px solid var(--border)';
+        avatarEl.innerHTML = `<img src="${pic}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;">`;
+      } else {
+        avatarEl.style.background = grad;
+        avatarEl.style.border = 'none';
+        avatarEl.innerHTML = lbl;
+      }
+      
+      // Render title (Real Name if available, otherwise "LINE User ID")
+      const nameLabel = document.getElementById('chat-detail-name-label');
+      if (profile && profile.line_name) {
+        nameLabel.style.fontSize = '.95rem';
+        nameLabel.style.fontWeight = '700';
+        nameLabel.style.color = '#f1f5f9';
+        nameLabel.textContent = profile.line_name;
+      } else {
+        nameLabel.style.fontSize = '.72rem';
+        nameLabel.style.fontWeight = 'normal';
+        nameLabel.style.color = '#9ca3af';
+        nameLabel.textContent = 'LINE User ID';
+      }
+      
+      document.getElementById('chat-detail-uid').textContent = userId;
+      document.getElementById('chat-detail-meta').textContent = 'กำลังโหลด...';
+      document.getElementById('chat-detail-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px;color:#6b7280">
+      <div style="font-size:2rem;animation:spin 1s linear infinite">⏳</div>
+      <div style="font-size:.82rem">กำลังโหลดประวัติแชท...</div>
+    </div>`;
+      openModal('modal-chat-detail');
+
+      const logs = await api('GET', '/api/chats/' + userId + '?limit=50');
+      const body = document.getElementById('chat-detail-body');
+
+      if (!logs.length) {
+        document.getElementById('chat-detail-meta').textContent = 'ยังไม่มีประวัติแชท';
+        body.innerHTML = '<div style="color:#6b7280;text-align:center;padding:40px;font-size:.85rem">💬 ยังไม่มีประวัติแชท</div>';
+        return;
+      }
+
+      document.getElementById('chat-detail-meta').textContent = `${logs.length} รายการแชทล่าสุด`;
+      
+      const reversedLogs = [...logs].reverse();
+      body.innerHTML = reversedLogs.map(log => {
+        let html = '';
+        if (log.message) {
+          const isPureImage = log.message.startsWith('[IMAGE: ') && log.message.endsWith(']');
+          const parsedContent = parseMessageContent(log.message);
+          html += `
+            <div class="bubble-user" style="${isPureImage ? 'background:transparent;border:none;padding:0;box-shadow:none;' : ''}">
+              <div class="bubble-text">${parsedContent}</div>
+              <div class="bubble-time" style="text-align:right;margin-top:4px">${new Date(log.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
+            </div>`;
+        }
+        if (log.response) {
+          const isReader = log.response.startsWith('👩‍🔮 [หมอดู]:');
+          const cleanText = isReader ? log.response.replace('👩‍🔮 [หมอดู]:', '').trim() : log.response;
+          const bubbleClass = isReader ? 'bubble-reader' : 'bubble-bot';
+          const label = isReader ? '<span style="color:var(--green);font-weight:600;font-size:.7rem;display:block;margin-bottom:4px">👩‍🔮 คุณ (หมอดู)</span>' : '<span style="color:#a78bfa;font-weight:600;font-size:.7rem;display:block;margin-bottom:4px">🤖 บอท AI</span>';
+          const parsedContent = parseMessageContent(cleanText);
+          
+          html += `
+            <div class="${bubbleClass}">
+              ${label}
+              <div class="bubble-text">${parsedContent}</div>
+              <div class="bubble-time" style="text-align:left;margin-top:4px">${new Date(log.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
+            </div>`;
+        }
+        return html;
+      }).join('');
+
+      setTimeout(() => { body.scrollTop = body.scrollHeight; }, 50);
+    }
+
+    async function loadReaders() {
+      let readers = await api('GET', '/api/readers');
+      if (!Array.isArray(readers)) readers = [];
+      availableReaders = readers;
+      const grid = document.getElementById('readers-grid');
+      if (!readers.length) {
+        grid.innerHTML = `<div class="card" style="text-align:center;color:#6b7280;padding:40px;grid-column:1/-1">ยังไม่มีหมอดู — กดปุ่ม "สร้างหมอดูใหม่" เพื่อเพิ่ม</div>`;
+      } else {
+        grid.innerHTML = '';
+        for (const r of readers) {
+          let users = await api('GET', `/api/readers/${r.id}/users`);
+          if (!Array.isArray(users)) users = [];
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.style.cssText = 'padding:20px;display:flex;flex-direction:column;gap:14px';
+          card.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">🔮</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:1rem;color:#e2e8f0">${esc(r.name)}</div>
+                <div style="font-size:.75rem;color:#6b7280">@${esc(r.username)} &nbsp;·&nbsp; สร้าง ${fmtDate(r.created_at)}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                <span style="font-size:.65rem;background:rgba(59,130,246,.15);color:var(--blue);padding:2px 8px;border-radius:99px;white-space:nowrap">ดูแลอยู่: ${users.length} คน</span>
+                <span style="font-size:.65rem;background:rgba(16,185,129,.15);color:var(--green);padding:2px 8px;border-radius:99px;white-space:nowrap">ดูแล้ว: ${r.completed_clients || 0} คน</span>
+              </div>
+            </div>
+            <div style="border-top:1px solid var(--border);padding-top:12px">
+              <div style="font-size:.75rem;color:#6b7280;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">ลูกค้าที่ดูแล</div>
+              <div id="reader-users-${r.id}" style="display:flex;flex-direction:column;gap:8px">
+                ${users.length === 0
+                  ? `<div style="color:#4b5563;font-size:.8rem;text-align:center;padding:12px">ยังไม่มีลูกค้าที่ถูกมอบหมาย</div>`
+                  : users.map(u => `
+                      <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border-radius:8px;padding:8px 10px;gap:8px">
+                        <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1">
+                          ${u.line_picture ? `<img src="${u.line_picture}" style="width:28px;height:28px;border-radius:50%">` : `<div style="width:28px;height:28px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.65rem">👤</div>`}
+                          <div style="min-width:0;flex:1">
+                            <div style="font-size:.8rem;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${u.line_name ? esc(u.line_name) : u.user_id}">${u.line_name ? esc(u.line_name) : '—'}</div>
+                            <div style="font-size:.65rem;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">💰 ${u.credit} · 📖 ${u.total_readings || 0} · ${isVIPActive(u.subscription_expires_at) ? '<span style="color:#22c55e">VIP</span>' : 'ปกติ'}</div>
+                          </div>
+                        </div>
+                        <button class="btn btn-red" style="font-size:.68rem;padding:4px 8px;flex-shrink:0" onclick="removeUserFromReader('${u.user_id}', ${r.id})">✕ ลบ</button>
+                      </div>`).join('')}
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <button class="btn btn-green" style="font-size:.78rem;width:100%" onclick="openReaderHistory(${r.id}, '${esc(r.name)}')">📂 ดูประวัติการดูดวง (${r.completed_readings || 0} คิว)</button>
+              <button class="btn btn-blue" style="font-size:.78rem;width:100%" onclick="openAddUserToReader(${r.id}, '${esc(r.name)}')">➕ มอบหมายลูกค้าให้หมอดูนี้</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        }
+      }
+
+      // โหลดลูกค้าที่ยังไม่มีหมอดู
+      let unassigned = await api('GET', '/api/unassigned-users');
+      if (!Array.isArray(unassigned)) unassigned = [];
+      const unassignedEl = document.getElementById('unassigned-count');
+      const unassignedList = document.getElementById('unassigned-users-list');
+      unassignedEl.textContent = unassigned.length + ' คน';
+      if (!unassigned.length) {
+        unassignedList.innerHTML = `<div style="color:#4b5563;font-size:.82rem;padding:16px">✅ ลูกค้าทุกคนมีหมอดูดูแลแล้ว</div>`;
+      } else {
+        unassignedList.innerHTML = unassigned.map(u => `
+          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:10px 14px;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1">
+              ${u.line_picture ? `<img src="${u.line_picture}" style="width:30px;height:30px;border-radius:50%">` : `<div style="width:30px;height:30px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.7rem">👤</div>`}
+              <div style="min-width:0;flex:1">
+                <div style="font-size:.82rem;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${u.line_name ? esc(u.line_name) : u.user_id}">${u.line_name ? esc(u.line_name) : '—'}</div>
+                <div style="font-size:.68rem;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">💰 ${u.credit} · 📖 ${u.total_readings || 0} · ${isVIPActive(u.subscription_expires_at) ? '<span style="color:#22c55e">VIP</span>' : 'ปกติ'}</div>
+              </div>
+            </div>
+            <select onchange="quickAssignReader('${u.user_id}', this.value)" style="font-size:.72rem;background:#0d0d1a;border:1px solid var(--border);color:#e2e8f0;border-radius:6px;padding:4px 8px;outline:none;flex-shrink:0;max-width:110px">
+              <option value="">เลือกหมอดู...</option>
+              ${availableReaders.map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}
+            </select>
+          </div>`).join('');
+      }
+
+      // โหลดลูกค้าระบบจองตัวทั้งหมด
+      await loadBookingCustomers();
+    }
+
+    async function loadBookingCustomers() {
+      try {
+        const customers = await api('GET', '/api/booking-customers');
+        const countEl = document.getElementById('booking-customers-count');
+        const tableBody = document.getElementById('booking-customers-table');
+        if (!customers || !Array.isArray(customers)) return;
+        countEl.textContent = customers.length + ' คน';
+        if (customers.length === 0) {
+          tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:24px">ยังไม่มีลูกค้าในระบบจองคิว</td></tr>';
+          return;
+        }
+        tableBody.innerHTML = customers.map(c => {
+          const pic = c.line_picture ? `<img src="${c.line_picture}" style="width:30px;height:30px;border-radius:50%;vertical-align:middle;margin-right:8px;border:1px solid var(--border)">` : `<div style="width:30px;height:30px;border-radius:50%;background:var(--bg3);display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;vertical-align:middle;margin-right:8px;border:1px solid var(--border)">👤</div>`;
+          const name = c.line_name ? esc(c.line_name) : '—';
+          const isVip = isVIPActive(c.subscription_expires_at);
+          return `
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px">
+                  ${pic}
+                  <div>
+                    <div style="font-weight:600;font-size:.82rem;color:#e2e8f0">${name}</div>
+                    <div style="font-family:monospace;font-size:.65rem;color:#6b7280" title="${c.user_id}">${c.user_id.substring(0, 18)}...</div>
+                  </div>
+                </div>
+              </td>
+              <td style="text-align:center;font-weight:bold">${c.total_bookings}</td>
+              <td style="text-align:center;color:var(--green);font-weight:bold">${c.completed_bookings}</td>
+              <td><span style="font-size:.75rem;color:#9ca3af">${fmtDate(c.last_booking_at)}</span></td>
+              <td><span style="color:var(--gold);font-weight:600">💰 ${c.credit} ฿</span></td>
+              <td><span class="tag ${isVip ? 'tag-vip' : 'tag-normal'}">${isVip ? '👑 VIP' : 'ปกติ'}</span></td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('Failed to load booking customers:', err);
+      }
+    }
+
+    async function openReaderHistory(readerId, readerName) {
+      try {
+        document.getElementById('reader-history-title').textContent = `หมอดู: ${readerName}`;
+        const tbody = document.getElementById('reader-history-table-body');
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align:center;padding:32px;color:#6b7280">
+              <div style="font-size:1.5rem;animation:spin 1s linear infinite;display:inline-block">⏳</div>
+              <div style="font-size:.82rem;margin-top:8px">กำลังโหลดประวัติ...</div>
+            </td>
+          </tr>
+        `;
+        openModal('modal-reader-history');
+        const history = await api('GET', `/api/readers/${readerId}/history`);
+        if (!history || !Array.isArray(history) || history.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#6b7280">ยังไม่มีประวัติการให้บริการดูดวงสำหรับหมอดูท่านนี้</td></tr>';
+          return;
+        }
+        tbody.innerHTML = history.map(h => {
+          const pic = h.line_picture ? `<img src="${h.line_picture}" style="width:30px;height:30px;border-radius:50%;vertical-align:middle;margin-right:8px;border:1px solid var(--border)">` : `<div style="width:30px;height:30px;border-radius:50%;background:var(--bg3);display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;vertical-align:middle;margin-right:8px;border:1px solid var(--border)">👤</div>`;
+          const name = h.line_name ? esc(h.line_name) : '—';
+          const isVip = isVIPActive(h.subscription_expires_at);
+          return `
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px">
+                  ${pic}
+                  <div>
+                    <div style="font-weight:600;font-size:.82rem;color:#e2e8f0">${name}</div>
+                    <div style="font-family:monospace;font-size:.65rem;color:#6b7280" title="${h.user_id}">${h.user_id.substring(0, 18)}...</div>
+                  </div>
+                </div>
+              </td>
+              <td style="text-align:center;font-weight:bold;color:var(--green)">${h.served_count}</td>
+              <td><span class="tag ${isVip ? 'tag-vip' : 'tag-normal'}">${isVip ? '👑 VIP' : 'ปกติ'}</span></td>
+              <td><span style="color:var(--gold);font-weight:600">💰 ${h.credit} ฿</span></td>
+              <td style="font-size:.75rem;color:#9ca3af">${fmtDate(h.last_served_at)}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        alert('โหลดประวัติไม่สำเร็จ: ' + err.message);
+      }
+    }
+
+    async function quickAssignReader(userId, readerId) {
+      if (!readerId) return;
+      await api('POST', `/api/users/${userId}/assign-reader`, { readerId });
+      loadReaders();
+    }
+
+    async function removeUserFromReader(userId, readerId) {
+      if (!confirm(`ลบ ${userId} ออกจากหมอดูนี้?`)) return;
+      await api('POST', `/api/users/${userId}/assign-reader`, { readerId: null });
+      loadReaders();
+    }
+
+    let addUserToReaderId = null;
+    function openAddUserToReader(readerId, readerName) {
+      addUserToReaderId = readerId;
+      document.getElementById('add-user-reader-name').textContent = readerName;
+      document.getElementById('add-user-userid-input').value = '';
+      openModal('modal-add-user-to-reader');
+    }
+
+    async function submitAddUserToReader() {
+      const userId = document.getElementById('add-user-userid-input').value.trim();
+      if (!userId) return alert('กรุณากรอก User ID');
+      const r = await api('POST', `/api/users/${userId}/assign-reader`, { readerId: addUserToReaderId });
+      if (r.error) return alert('เกิดข้อผิดพลาด: ' + r.error);
+      closeModal('modal-add-user-to-reader');
+      loadReaders();
+    }
+
+    async function submitAddReader() {
+      const username = document.getElementById('reader-username').value.trim();
+      const password = document.getElementById('reader-password').value.trim();
+      const name = document.getElementById('reader-name').value.trim();
+      if (!username || !password || !name) return alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+
+      const r = await api('POST', '/api/readers', { username, password, name });
+      if (r.error) return alert(r.error);
+
+      alert('สร้างหมอดูสำเร็จ ID: ' + r.id);
+      closeModal('modal-add-reader');
+      document.getElementById('reader-username').value = '';
+      document.getElementById('reader-password').value = '';
+      document.getElementById('reader-name').value = '';
+      loadReaders();
+    }
+
+    let assignTargetUser = null;
+    function openAssignReader(userId, currentReaderId) {
+      assignTargetUser = userId;
+      document.getElementById('assign-user-id').textContent = userId;
+      const select = document.getElementById('assign-reader-select');
+
+      select.innerHTML = '<option value="">-- ไม่ระบุ (ลบการมอบหมาย) --</option>' +
+        availableReaders.map(r => `<option value="${r.id}">${esc(r.name)} (@${esc(r.username)})</option>`).join('');
+
+      select.value = currentReaderId || '';
+      openModal('modal-assign-reader');
+    }
+
+    async function submitAssignReader() {
+      const readerId = document.getElementById('assign-reader-select').value;
+      const r = await api('POST', `/api/users/${assignTargetUser}/assign-reader`, { readerId });
+      if (r.error) return alert(r.error);
+
+      alert('บันทึกการมอบหมายสำเร็จ');
+      closeModal('modal-assign-reader');
+      loadUsers();
+    }
+
+    // ── AI Training ─────────────────────────────────────────
+    async function loadAITraining() {
+      const tb = document.getElementById('tb-aitraining');
+      tb.innerHTML = '<tr><td colspan="7" style="text-align:center">⏳ กำลังโหลด...</td></tr>';
+      try {
+        const data = await api('GET', '/api/ai-training');
+        if (!data || data.length === 0) {
+          tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;">ยังไม่มีข้อมูล</td></tr>';
+          return;
+        }
+        window.aiTrainingData = data;
+        tb.innerHTML = data.map(d => `
+          <tr>
+            <td>#${d.id}</td>
+            <td>${fmtDate(d.created_at)}</td>
+            <td>
+              <div style="font-weight:600;color:var(--text)">${d.line_name || 'ไม่ทราบชื่อ'}</div>
+              <div style="font-size:0.75rem;color:#888;">${d.user_id.slice(0, 10)}...</div>
+            </td>
+            <td>
+              <div style="font-weight:600;color:#f59e0b">${d.topic || '-'}</div>
+              <div style="font-size:0.75rem;color:#10b981;">ไพ่: ${d.cards || '-'}</div>
+            </td>
+            <td>
+              <div style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${d.prompt}">${d.prompt}</div>
+            </td>
+            <td>
+              ${d.rating > 0 ? `<div style="color:#fbbf24;font-size:1.1rem">${'⭐'.repeat(d.rating)}</div>` : '<span style="color:#666">รอคะแนน</span>'}
+            </td>
+            <td>
+              <button class="btn btn-blue" style="padding:4px 8px;font-size:0.75rem" onclick="viewAIDetail(${d.id})">ดูเต็มๆ</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch(e) {
+        tb.innerHTML = `<tr><td colspan="7" style="color:#ef4444">${e.message}</td></tr>`;
+      }
+    }
+
+    function viewAIDetail(id) {
+      const d = window.aiTrainingData.find(x => x.id === id);
+      if(!d) return;
+      document.getElementById('ai-modal-topic').textContent = d.topic || '-';
+      document.getElementById('ai-modal-prompt').textContent = d.prompt || '-';
+      document.getElementById('ai-modal-response').textContent = d.response || '-';
+      document.getElementById('ai-modal-rating').innerHTML = d.rating > 0 ? `<span style="color:#fbbf24;font-size:1.2rem">${'⭐'.repeat(d.rating)}</span>` : '-';
+      openModal('modal-ai-detail');
+    }
+
+    // ── Init ─────────────────────────────────────────────
+
+    // ── Revenue Chart ─────────────────────────────────────
+    let revenueChart = null;
+    let activeChartDays = 7;
+
+    async function loadChart(days = 7) {
+      activeChartDays = days;
+      [7, 30, 90].forEach(d => {
+        const btn = document.getElementById(`chart-btn-${d}`);
+        if (btn) {
+          btn.classList.toggle('btn-blue', d === days);
+          btn.style.background = d === days ? '' : '#1f2937';
+        }
+      });
+
+      try {
+        const data = await api('GET', `/api/revenue-chart?days=${days}`);
+        const labels = data.map(r => r.day.slice(5)); // MM-DD
+        const credits = data.map(r => r.credit_revenue || 0);
+        const subs = data.map(r => r.sub_revenue || 0);
+
+        document.getElementById('chart-empty').style.display = data.length === 0 ? 'flex' : 'none';
+
+        const ctx = document.getElementById('revenue-chart').getContext('2d');
+        if (revenueChart) revenueChart.destroy();
+
+        revenueChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Credit',
+                data: credits,
+                backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                borderColor: '#6366f1',
+                borderWidth: 1,
+                borderRadius: 4
+              },
+              {
+                label: 'VIP Sub',
+                data: subs,
+                backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                borderColor: '#f59e0b',
+                borderWidth: 1,
+                borderRadius: 4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: '#9ca3af', font: { size: 12 } } },
+              tooltip: {
+                callbacks: {
+                  label: ctx => `${ctx.dataset.label}: ฿${ctx.parsed.y.toLocaleString()}`
+                }
+              }
+            },
+            scales: {
+              x: { stacked: true, ticks: { color: '#6b7280', font: { size: 11 } }, grid: { color: 'rgba(75,85,99,.2)' } },
+              y: { stacked: true, ticks: { color: '#6b7280', callback: v => '฿' + v.toLocaleString() }, grid: { color: 'rgba(75,85,99,.2)' } }
+            }
+          }
+        });
+      } catch(e) {
+        console.error('Chart error:', e);
+      }
+    }
+
+    // ── Broadcast ─────────────────────────────────────────
+    function onBroadcastTypeChange() {
+      const type = document.getElementById('broadcast-type').value;
+      const editorCol = document.getElementById('broadcast-message').parentElement;
+      const previewCol = document.getElementById('broadcast-preview-col');
+      const flexAdNotice = document.getElementById('broadcast-flex-ad-notice');
+      
+      if (type === 'flex_ad') {
+        editorCol.style.display = 'none';
+        previewCol.style.display = 'none';
+        if (flexAdNotice) flexAdNotice.style.display = 'block';
+      } else if (type === 'flex') {
+        editorCol.style.display = 'flex';
+        previewCol.style.display = 'flex';
+        if (flexAdNotice) flexAdNotice.style.display = 'none';
+        document.getElementById('broadcast-msg-label').textContent = 'JSON ของ Flex Message';
+        document.getElementById('broadcast-message').placeholder = '{\n  "type": "bubble",\n  "body": { ... }\n}';
+        onBroadcastInput();
+      } else {
+        editorCol.style.display = 'flex';
+        previewCol.style.display = 'none';
+        if (flexAdNotice) flexAdNotice.style.display = 'none';
+        document.getElementById('broadcast-msg-label').textContent = 'ข้อความ';
+        document.getElementById('broadcast-message').placeholder = 'พิมพ์ข้อความที่ต้องการส่งหาลูกค้า...';
+      }
+    }
+
+    function onBroadcastInput() {
+      const type = document.getElementById('broadcast-type').value;
+      if (type !== 'flex') return;
+      
+      const raw = document.getElementById('broadcast-message').value.trim();
+      const statusEl = document.getElementById('broadcast-json-status');
+      const previewContainer = document.getElementById('broadcast-preview-container');
+      
+      if (!raw) {
+        statusEl.textContent = '⬜ กรุณาวาง JSON ของ Flex Message';
+        statusEl.style.color = '#6b7280';
+        if (previewContainer) previewContainer.innerHTML = '<div style="text-align:center;color:#666;margin-top:40px;font-size:.85rem">รอแสดงผลพรีวิว...</div>';
+        return;
+      }
+      
+      try {
+        let parsed = JSON.parse(raw);
+        if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+        statusEl.textContent = '✅ JSON ถูกต้อง';
+        statusEl.style.color = '#10b981';
+        
+        if (window.renderFlex && previewContainer) {
+          try {
+            previewContainer.innerHTML = window.renderFlex(parsed);
+          } catch(e) {
+            previewContainer.innerHTML = '<div style="text-align:center;color:#ef4444;margin-top:40px;font-size:.85rem">❌ แสดงผลพรีวิวไม่ได้: ' + e.message + '</div>';
+          }
+        }
+      } catch(e) {
+        statusEl.textContent = '❌ JSON ไม่ถูกต้อง: ' + e.message;
+        statusEl.style.color = '#ef4444';
+        if (previewContainer) previewContainer.innerHTML = '<div style="text-align:center;color:#ef4444;margin-top:40px;font-size:.85rem">❌ JSON ไม่ถูกต้อง</div>';
+      }
+    }
+
+    async function sendBroadcast() {
+      const message = document.getElementById('broadcast-message').value.trim();
+      const target = document.getElementById('broadcast-target').value;
+      const msgType = document.getElementById('broadcast-type').value;
+      const status = document.getElementById('broadcast-status');
+
+      if (msgType !== 'flex_ad' && !message) { 
+        status.textContent = '⚠️ กรุณาพิมพ์ข้อความก่อน'; 
+        status.style.color = '#f59e0b'; 
+        return; 
+      }
+
+      const targetLabel = target === 'vip' ? 'ลูกค้า VIP' : 'ลูกค้าทั้งหมด';
+      const msgLabel = msgType === 'flex_ad' ? 'โฆษณา Flex Message' : (msgType === 'flex' ? 'Flex Message' : 'ข้อความ');
+      if (!confirm(`ยืนยันส่ง ${msgLabel} หา${targetLabel}?`)) return;
+
+      status.textContent = '📤 กำลังส่ง...';
+      status.style.color = '#9ca3af';
+
+      try {
+        const r = await api('POST', '/api/broadcast', { message, target, msgType });
+        if (r.success) {
+          status.textContent = `✅ ส่งสำเร็จ ${r.sent} คน`;
+          status.style.color = '#10b981';
+          if (msgType !== 'flex_ad') {
+            document.getElementById('broadcast-message').value = '';
+            if (msgType === 'flex') onBroadcastInput();
+          }
+        } else {
+          status.textContent = '❌ ' + (r.error || 'เกิดข้อผิดพลาด');
+          status.style.color = '#ef4444';
+        }
+      } catch(e) {
+        status.textContent = '❌ ' + e.message;
+        status.style.color = '#ef4444';
+      }
+    }
+
+    // ── Settings ──────────────────────────────────────────
+    async function loadFlexDefault(type) {
+      if (!confirm('คุณต้องการโหลดค่าเริ่มต้นของระบบใช่หรือไม่? การกระทำนี้จะนำค่าเริ่มต้นของระบบมาแทนที่ในช่องนี้')) return;
+      try {
+        const r = await api('GET', '/api/settings/flex-default/' + type);
+        if (r.template) {
+          document.getElementById('setting-' + type).value = JSON.stringify(r.template, null, 2);
+        } else {
+          alert('ไม่พบค่าเริ่มต้น');
+        }
+      } catch(e) {
+        alert('เกิดข้อผิดพลาด: ' + e.message);
+      }
+    }
+
+    // ── Flex Editor (Dropdown + Single Editor) ────────────────
+    const FLEX_KEYS = ['flex_booking','flex_payment_menu','flex_payment_success','flex_rating','flex_profile','flex_profile_vip','flex_ad'];
+    let flexData = {}; // เก็บ JSON string ของทุก flex key
+
+    function prettyJson(str) {
+      if (!str || !str.trim()) return '';
+      // Try 1: normal JSON parse → handles {"type":"bubble"} or "{\n \"type\":...}"
+      try {
+        let parsed = JSON.parse(str);
+        if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+        if (typeof parsed === 'object' && parsed !== null) return JSON.stringify(parsed, null, 2);
+      } catch(e1) {}
+      // Try 2: unescape \n → newline, \" → " (data stored without outer quotes)
+      try {
+        const unescaped = str.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+        let parsed = JSON.parse(unescaped);
+        if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+        return JSON.stringify(parsed, null, 2);
+      } catch(e2) {}
+      // Try 3: wrap in quotes and parse as JSON string
+      try {
+        const wrapped = '"' + str.replace(/"/g, '\\"').replace(/\n/g, '\\n') + '"';
+        let parsed = JSON.parse(JSON.parse(wrapped));
+        return JSON.stringify(parsed, null, 2);
+      } catch(e3) {}
+      return str; // return ค่าเดิมถ้าทำไม่ได้จริงๆ
+    }
+
+    function getCurrentFlexKey() {
+      return document.getElementById('flex-type-select').value;
+    }
+
+    function onFlexTypeChange() {
+      // บันทึก editor ปัจจุบันก่อนเปลี่ยน
+      const prevKey = Object.keys(flexData).length > 0 ? null : null; // unused but keep pattern
+      const key = getCurrentFlexKey();
+      document.getElementById('flex-json-editor').value = prettyJson(flexData[key] || '');
+      updateFlexStatus();
+    }
+
+    function onFlexEditorInput() {
+      // อัพเดท flexData ทุกครั้งที่พิมพ์
+      const key = getCurrentFlexKey();
+      flexData[key] = document.getElementById('flex-json-editor').value;
+      updateFlexStatus();
+    }
+
+    function updateFlexStatus() {
+      const statusEl = document.getElementById('flex-json-status');
+      const raw = document.getElementById('flex-json-editor').value.trim();
+      const previewContainer = document.getElementById('flex-preview-container');
+      
+      if (!raw) {
+        statusEl.textContent = '⬜ ว่างอยู่ — บอทจะใช้หน้าตาเริ่มต้น';
+        statusEl.style.color = '#6b7280';
+        if (previewContainer) previewContainer.innerHTML = '<div style="text-align:center;color:#666;margin-top:40px;font-size:.85rem">รอการแสดงผลพรีวิว...</div>';
+        return;
+      }
+      try {
+        let parsed = JSON.parse(raw);
+        if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+        statusEl.textContent = '✅ JSON ถูกต้อง — พร้อมบันทึก';
+        statusEl.style.color = '#10b981';
+        
+        // Render realtime preview if flex-render is loaded
+        if (window.renderFlex && previewContainer) {
+          try {
+            previewContainer.innerHTML = window.renderFlex(parsed);
+          } catch(e) {
+            previewContainer.innerHTML = '<div style="text-align:center;color:#ef4444;margin-top:40px;font-size:.85rem">❌ แสดงผลพรีวิวไม่ได้</div>';
+          }
+        }
+      } catch(e) {
+        statusEl.textContent = '❌ JSON ไม่ถูกต้อง: ' + e.message;
+        statusEl.style.color = '#ef4444';
+        if (previewContainer) previewContainer.innerHTML = '<div style="text-align:center;color:#ef4444;margin-top:40px;font-size:.85rem">❌ JSON ไม่ถูกต้อง</div>';
+      }
+    }
+
+    async function copyFlexJson() {
+      const editor = document.getElementById('flex-json-editor');
+      const btn = document.getElementById('flex-copy-btn');
+      const raw = editor.value.trim();
+      if (!raw) { alert('ไม่มี JSON ในช่อง'); return; }
+      // pretty-print ก่อน copy
+      const pretty = prettyJson(raw) || raw;
+      try {
+        await navigator.clipboard.writeText(pretty);
+        btn.textContent = '✅ Copied!';
+        btn.style.background = 'rgba(16,185,129,.2)';
+        btn.style.color = 'var(--green)';
+        setTimeout(() => {
+          btn.textContent = '📋 Copy JSON';
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 2000);
+      } catch(e) {
+        // fallback
+        editor.select();
+        document.execCommand('copy');
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = '📋 Copy JSON', 2000);
+      }
+    }
+
+    async function loadFlexDefault(type) {
+      if (!confirm('โหลดค่าเริ่มต้นของระบบสำหรับ ' + type + '?\n(จะแทนที่ข้อความในช่อง แต่ยังไม่บันทึกจนกว่าจะกดบันทึก)')) return;
+      try {
+        const r = await api('GET', '/api/settings/flex-default/' + type);
+        if (r.template) {
+          // r.template comes as a string from the backend. 
+          // We just need to ensure it's pretty printed, but NOT double stringified.
+          const pretty = prettyJson(r.template) || r.template;
+          flexData[type] = pretty;
+          // ถ้าเป็น type ที่กำลังเลือกอยู่ ให้แสดงทันที
+          if (getCurrentFlexKey() === type) {
+            document.getElementById('flex-json-editor').value = pretty;
+          }
+          updateFlexStatus();
+        } else {
+          alert('ไม่พบค่าเริ่มต้นสำหรับ ' + type);
+        }
+      } catch(e) {
+        alert('เกิดข้อผิดพลาด: ' + e.message);
+      }
+    }
+
+    async function loadSettings() {
+      try {
+        const s = await api('GET', '/api/settings');
+        if (s.credit_price) document.getElementById('setting-credit_price').value = s.credit_price;
+        if (s.subscription_price) document.getElementById('setting-subscription_price').value = s.subscription_price;
+        if (s.vip_days) document.getElementById('setting-vip_days').value = s.vip_days;
+        if (s.welcome_message) document.getElementById('setting-welcome_message').value = s.welcome_message;
+        if (s.rate_limit) document.getElementById('setting-rate_limit').value = s.rate_limit;
+        // โหลด flex ทั้งหมดเข้า flexData
+        FLEX_KEYS.forEach(key => {
+          flexData[key] = s[key] ? prettyJson(s[key]) : '';
+        });
+        // แสดง flex ที่เลือกอยู่ใน editor
+        const currentKey = getCurrentFlexKey();
+        document.getElementById('flex-json-editor').value = flexData[currentKey] || '';
+        updateFlexStatus();
+      } catch(e) {
+        console.error('Settings error:', e);
+      }
+    }
+
+    async function saveSettings() {
+      const statusEl = document.getElementById('settings-status');
+      statusEl.textContent = 'กำลังบันทึก...';
+      statusEl.style.color = '#9ca3af';
+
+      // sync editor → flexData ก่อน
+      const currentKey = getCurrentFlexKey();
+      flexData[currentKey] = document.getElementById('flex-json-editor').value;
+
+      const payload = {
+        credit_price: document.getElementById('setting-credit_price').value,
+        subscription_price: document.getElementById('setting-subscription_price').value,
+        vip_days: document.getElementById('setting-vip_days').value,
+        welcome_message: document.getElementById('setting-welcome_message').value,
+        rate_limit: document.getElementById('setting-rate_limit').value
+      };
+      Object.keys(payload).forEach(k => { if (!payload[k] && payload[k] !== '0') delete payload[k]; });
+
+      // validate + clean flex JSON
+      for (const key of FLEX_KEYS) {
+        const raw = (flexData[key] || '').trim();
+        if (!raw) { payload[key] = ''; continue; }
+        try {
+          let parsed = JSON.parse(raw);
+          if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+          payload[key] = JSON.stringify(parsed);
+        } catch(e) {
+          statusEl.textContent = `❌ JSON ไม่ถูกต้องใน ${key}`;
+          statusEl.style.color = '#ef4444';
+          // สลับไปที่ key ที่มีปัญหา
+          document.getElementById('flex-type-select').value = key;
+          onFlexTypeChange();
+          setTimeout(() => statusEl.textContent = '', 5000);
+          return;
+        }
+      }
+
+      try {
+        const r = await api('POST', '/api/settings', payload);
+        if (r.success) {
+          statusEl.textContent = '✅ บันทึกสำเร็จ';
+          statusEl.style.color = '#10b981';
+          loadDashboard();
+        } else {
+          statusEl.textContent = '❌ ' + (r.error || 'เกิดข้อผิดพลาด');
+          statusEl.style.color = '#ef4444';
+        }
+      } catch(e) {
+        statusEl.textContent = '❌ ' + e.message;
+        statusEl.style.color = '#ef4444';
+      }
+      setTimeout(() => statusEl.textContent = '', 4000);
+    }
+
+
+    loadDashboard();
+    loadChart(7);
+  </script>
+
+  <!-- Live Chat Widget -->
+  <div id="live-chat-widget" class="collapsed" style="display:none;">
+    <div class="chat-header" onclick="toggleLiveChat()">
+      <div class="chat-icon">📢</div>
+      <div class="header-info">
+        <div class="header-title">Live Chat</div>
+        <div class="header-subtitle">มีลูกค้าต้องการคุยกับแอดมิน</div>
+      </div>
+      <div class="header-controls">
+        <select id="live-chat-select" class="chat-user-select" onchange="switchLiveChat(this.value)" onclick="event.stopPropagation()">
+          <option value="">- เลือกลูกค้า -</option>
+        </select>
+        <i onclick="event.stopPropagation(); toggleLiveChat()">⌄</i>
+      </div>
+      <div id="live-chat-badge" class="chat-badge" style="display:none;">0</div>
+    </div>
+    
+    <div class="chat-body" id="live-chat-body">
+      <div class="chat-empty">
+        <div style="font-size:2rem">💬</div>
+        <div>รอการติดต่อจากลูกค้า...</div>
+      </div>
+    </div>
+
+    <div class="chat-footer">
+      <div class="chat-input-row">
+        <input type="text" id="live-chat-input" placeholder="พิมพ์ข้อความ..." onkeypress="if(event.key==='Enter') sendLiveChat()">
+        <button class="chat-send-btn" onclick="sendLiveChat()">➤</button>
+      </div>
+      <button class="chat-end-btn" onclick="endLiveChat()">จบการสนทนา (ให้ AI ตอบแทน)</button>
+    </div>
+  </div>
+
+  <!-- Live Chat JS -->
+  <script>
+    let liveChats = [];
+    let currentLiveChatId = null;
+    let liveChatWidgetOpen = false;
+    let liveChatPolling = null;
+
+    function formatTime(ts) {
+      const d = new Date(ts);
+      return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    }
+
+    async function fetchLiveChats() {
+      try {
+        const res = await api('GET', '/api/live-chats');
+        liveChats = res;
+        
+        const widget = document.getElementById('live-chat-widget');
+        const badge = document.getElementById('live-chat-badge');
+        const select = document.getElementById('live-chat-select');
+        
+        if (liveChats.length > 0) {
+          widget.style.display = 'flex';
+          let totalUnread = 0;
+          
+          // Update select options
+          const prevValue = select.value;
+          select.innerHTML = '<option value="">- เลือกลูกค้า -</option>';
+          liveChats.forEach(c => {
+            totalUnread += c.unread;
+            const opt = document.createElement('option');
+            opt.value = c.userId;
+            opt.textContent = c.name + (c.unread > 0 ? ` (${c.unread})` : '');
+            select.appendChild(opt);
+          });
+          
+          // Auto select if 1 chat and none selected
+          if (liveChats.length === 1 && !currentLiveChatId) {
+            switchLiveChat(liveChats[0].userId);
+            select.value = liveChats[0].userId;
+          } else if (currentLiveChatId) {
+            select.value = currentLiveChatId;
+            renderLiveChatBody();
+          }
+
+          if (totalUnread > 0 && !liveChatWidgetOpen) {
+            badge.style.display = 'flex';
+            badge.textContent = totalUnread;
+          } else {
+            badge.style.display = 'none';
+          }
+        } else {
+          widget.style.display = 'none';
+          currentLiveChatId = null;
+        }
+      } catch(e) { console.error('Live chat poll error', e); }
+    }
+
+    function toggleLiveChat() {
+      const widget = document.getElementById('live-chat-widget');
+      const badge = document.getElementById('live-chat-badge');
+      liveChatWidgetOpen = !liveChatWidgetOpen;
+      
+      if (liveChatWidgetOpen) {
+        widget.classList.remove('collapsed');
+        badge.style.display = 'none';
+        if (liveChats.length > 0 && !currentLiveChatId) {
+          const select = document.getElementById('live-chat-select');
+          switchLiveChat(liveChats[0].userId);
+          select.value = liveChats[0].userId;
+        }
+        setTimeout(() => {
+          const body = document.getElementById('live-chat-body');
+          body.scrollTop = body.scrollHeight;
+        }, 300);
+      } else {
+        widget.classList.add('collapsed');
+      }
+    }
+
+    function switchLiveChat(userId) {
+      currentLiveChatId = userId || null;
+      renderLiveChatBody();
+    }
+
+    function renderLiveChatBody() {
+      const body = document.getElementById('live-chat-body');
+      if (!currentLiveChatId) {
+        body.innerHTML = '<div class="chat-empty"><div style="font-size:2rem">💬</div><div>เลือกลูกค้าเพื่อเริ่มแชท...</div></div>';
+        return;
+      }
+      const chat = liveChats.find(c => c.userId === currentLiveChatId);
+      if (!chat) return;
+
+      if (chat.messages.length === 0) {
+        body.innerHTML = '<div class="chat-empty">เริ่มการสนทนา...</div>';
+        return;
+      }
+
+      let html = '';
+      chat.messages.forEach(m => {
+        if (m.sender === 'user') {
+          html += `
+            <div class="chat-bubble-wrapper user">
+              ${chat.pic ? `<img src="${chat.pic}" class="chat-avatar">` : `<div class="chat-avatar" style="background:#6b7280">${chat.name.substring(0,2)}</div>`}
+              <div class="chat-bubble user">
+                ${esc(m.text)}
+                <div class="chat-time">${formatTime(m.time)}</div>
+              </div>
+            </div>`;
+        } else {
+          html += `
+            <div class="chat-bubble-wrapper admin">
+              <div class="chat-bubble admin">
+                ${esc(m.text)}
+                <div class="chat-time">${formatTime(m.time)}</div>
+              </div>
+            </div>`;
+        }
+      });
+      
+      const wasAtBottom = body.scrollHeight - body.scrollTop <= body.clientHeight + 50;
+      body.innerHTML = html;
+      if (wasAtBottom) body.scrollTop = body.scrollHeight;
+    }
+
+    async function sendLiveChat() {
+      if (!currentLiveChatId) return;
+      const input = document.getElementById('live-chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      
+      input.value = '';
+      const body = document.getElementById('live-chat-body');
+      body.innerHTML += `
+        <div class="chat-bubble-wrapper admin">
+          <div class="chat-bubble admin" style="opacity:0.7">
+            ${esc(text)}
+            <div class="chat-time">กำลังส่ง...</div>
+          </div>
+        </div>`;
+      body.scrollTop = body.scrollHeight;
+
+      try {
+        await api('POST', '/api/live-chats/reply', { userId: currentLiveChatId, text });
+        fetchLiveChats();
+      } catch(e) {
+        alert('ส่งไม่สำเร็จ: ' + e.message);
+      }
+    }
+
+    async function endLiveChat() {
+      if (!currentLiveChatId) return;
+      if (!confirm('ยืนยันจบการสนทนาและให้ AI ตอบกลับตามปกติ?')) return;
+      
+      try {
+        await api('POST', '/api/live-chats/end', { userId: currentLiveChatId });
+        currentLiveChatId = null;
+        fetchLiveChats();
+      } catch(e) {
+        alert('เกิดข้อผิดพลาด: ' + e.message);
+      }
+    }
+
+    // เริ่ม Polling ทุก 3 วินาที
+    setInterval(fetchLiveChats, 3000);
+    // โหลดครั้งแรก
+    setTimeout(fetchLiveChats, 1000);
+  </script>
+
+  <script type="module">
+    import { render } from 'https://unpkg.com/flex-render@0.1.10/dist/index.js';
+    window.renderFlex = render;
+    if (typeof updateFlexStatus === 'function') {
+      updateFlexStatus();
+    }
+  </script>
+</body>
+
+</html>

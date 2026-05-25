@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Astrologer Live Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1016; --bg-card: #181922; --bg-hover: #232533;
+      --text: #e2e8f0; --text-dim: #9ca3af;
+      --primary: #8b5cf6; --primary-hover: #7c3aed;
+      --border: #2d3040;
+      --bot-msg: #232533; --user-msg: #8b5cf6; --reader-msg: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Prompt', 'Inter', sans-serif; }
+    body { background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+    /* Sidebar (Users List) */
+    .sidebar { width: 320px; background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+    .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
+    .sidebar-header h2 { font-size: 1.2rem; color: #fff; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .user-list { flex: 1; overflow-y: auto; padding: 10px; }
+    .user-item { padding: 12px 15px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: 0.2s; position: relative; }
+    .user-item:hover { background: var(--bg-hover); }
+    .user-item.active { background: var(--primary); }
+    .user-item.active .text-dim { color: #ddd; }
+    .user-id { font-size: 0.9rem; font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+    .user-preview { font-size: 0.8rem; color: var(--text-dim); margin-top: 4px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+    .live-badge { position: absolute; top: 12px; right: 15px; background: #ef4444; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 99px; display: none; }
+    .user-item.is-live .live-badge { display: block; }
+    .user-item.active .live-badge { background: #fff; color: #ef4444; }
+
+    /* Main Chat Area */
+    .main { flex: 1; display: flex; flex-direction: column; background: var(--bg); position: relative; min-width: 0; min-height: 0; }
+    #chat-interface { min-height: 0; }
+    .chat-header { padding: 15px 24px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .chat-title { font-size: 1.1rem; font-weight: 500; }
+    
+    /* Tools Sidebar (Right) */
+    .tools-sidebar { width: 300px; border-left: 1px solid var(--border); background: var(--bg-card); display: none; flex-direction: column; overflow-y: auto; }
+    .tool-section { padding: 20px; border-bottom: 1px solid var(--border); }
+    .tool-section h3 { margin-top: 0; font-size: 0.95rem; color: var(--text-dim); margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .timer-display { font-size: 2.5rem; font-family: monospace; font-weight: bold; text-align: center; color: var(--text); padding: 10px; background: #0d0d14; border-radius: 8px; margin-bottom: 12px; }
+    .timer-display.warning { color: #f59e0b; }
+    .timer-display.danger { color: #ef4444; }
+    .btn-timer { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+    .btn-timer.start { background: #10b981; color: white; }
+    .btn-timer.reset { background: #4b5563; color: white; }
+    
+    .memo-input { width: 100%; height: 180px; background: #0d0d14; border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: white; resize: none; font-size: 0.9rem; margin-bottom: 10px; }
+    .memo-input:focus { border-color: var(--blue); outline: none; }
+    .btn-save { width: 100%; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
+    .btn-end { width: 100%; padding: 14px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+    .btn-end:hover { background: #dc2626; }
+    
+    /* Toggle Switch */
+    .live-toggle-container { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4b5563; transition: .4s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #ef4444; }
+    input:checked + .slider:before { transform: translateX(20px); }
+    .status-text { color: var(--text-dim); font-size: 0.85rem; }
+    .status-text.active { color: #ef4444; font-weight: 500; }
+
+    /* Chat Messages */
+    .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .msg-wrap { display: flex; flex-direction: column; max-width: 70%; }
+    .msg-wrap.left { align-self: flex-start; }
+    .msg-wrap.right { align-self: flex-end; }
+    
+    .msg-sender { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px; margin-left: 4px; }
+    .msg-wrap.right .msg-sender { align-self: flex-end; margin-right: 4px; }
+    
+    .msg-bubble { padding: 12px 16px; border-radius: 16px; font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+    .msg-wrap.left .msg-bubble { background: var(--bot-msg); border-bottom-left-radius: 4px; }
+    .msg-wrap.right .msg-bubble { background: var(--user-msg); border-bottom-right-radius: 4px; }
+    .msg-wrap.right.reader .msg-bubble { background: var(--reader-msg); } /* สีพิเศษตอนหมอดูตอบ */
+    
+    .msg-time { font-size: 0.65rem; color: var(--text-dim); margin-top: 4px; align-self: flex-end; }
+    
+    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); gap: 16px; }
+
+    /* Chat Input */
+    .chat-input-area { padding: 20px; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; gap: 12px; }
+    .chat-input { flex: 1; background: #0d0d14; border: 1px solid var(--border); padding: 12px 16px; border-radius: 8px; color: white; font-size: 0.95rem; outline: none; transition: 0.2s; resize: none; min-height: 48px; max-height: 120px; }
+    .chat-input:focus { border-color: var(--primary); }
+    .chat-input:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-send { background: var(--primary); color: white; border: none; padding: 0 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: 0.2s; font-weight: 500; }
+    .btn-send:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; background: #4b5563; }
+
+    .loader { display: none; width: 20px; height: 20px; border: 2px solid #fff; border-bottom-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* Login Screen */
+    #login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .login-box { background: var(--bg-card); padding: 40px; border-radius: 16px; border: 1px solid var(--border); width: 100%; max-width: 400px; text-align: center; }
+    .login-box h2 { margin-bottom: 24px; }
+    .login-input { width: 100%; padding: 12px; margin-bottom: 16px; background: #0d0d14; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 1rem; }
+    .btn-login { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 500; }
+    .btn-login:hover { background: var(--primary-hover); }
+    #app-container { display: none; height: 100vh; width: 100vw; }
+  </style>
+</head>
+<body>
+
+  <!-- Login Screen -->
+  <div id="login-screen">
+    <div class="login-box">
+      <h2>🔮 Reader Login</h2>
+      <input type="text" id="login-user" class="login-input" placeholder="Username">
+      <input type="password" id="login-pass" class="login-input" placeholder="Password" onkeydown="if(event.key==='Enter') login()">
+      <button class="btn-login" onclick="login()">Login</button>
+      <div id="login-error" style="color:#ef4444; margin-top:12px; font-size:0.85rem;"></div>
+    </div>
+  </div>
+
+  <div id="app-container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="margin:0;">🔮 Live Reader Panel</h2>
+      <button onclick="logout()" style="background:transparent; border:1px solid #4b5563; color:#9ca3af; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem;">Logout</button>
+    </div>
+    <div class="user-list" id="user-list">
+      <!-- Users will be loaded here -->
+      <div class="loader" id="users-loader" style="display:block"></div>
+    </div>
+  </div>
+
+  <!-- Main Chat -->
+  <div class="main">
+    <div class="empty-state" id="empty-state">
+      <span style="font-size:3rem">💬</span>
+      <p>เลือกผู้ใช้จากแถบด้านซ้ายเพื่อดูประวัติและเริ่มการแชท</p>
+    </div>
+
+    <div id="chat-interface" style="display:none; flex:1; flex-direction:column;">
+      <div class="chat-header">
+        <div class="chat-title" id="chat-title">User ID</div>
+        <div class="live-toggle-container">
+          <span class="status-text" id="live-status-text">บอท AI ทำงาน</span>
+          <label class="switch">
+            <input type="checkbox" id="live-toggle" onchange="toggleLiveStatus(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="chat-box" id="chat-box">
+        <!-- Messages -->
+      </div>
+      
+      <div class="chat-input-area">
+        <textarea class="chat-input" id="chat-input" placeholder="พิมพ์ข้อความตอบกลับ... (ต้องเปิดโหมด Live Chat ก่อน)" disabled onkeydown="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
+        <button class="btn-send" id="btn-send" disabled onclick="sendMessage()">ส่ง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tools Sidebar -->
+  <div class="tools-sidebar" id="tools-sidebar">
+    <div class="tool-section">
+      <h3>⏱️ ตัวจับเวลา</h3>
+      <div class="timer-display" id="timer-display">30:00</div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-timer start" id="btn-timer-toggle" onclick="toggleTimer()">เริ่มจับเวลา</button>
+        <button class="btn-timer reset" onclick="resetTimer()">รีเซ็ต</button>
+      </div>
+    </div>
+
+    <div class="tool-section">
+      <h3>💬 ข้อความสำเร็จรูป</h3>
+      <div id="canned-replies" style="display:flex; flex-direction:column; gap:8px;"></div>
+      <div style="display:flex; gap:6px; margin-top:10px;">
+        <input id="new-canned-input" type="text" placeholder="เพิ่มข้อความใหม่..." style="flex:1; background:#0d0d14; border:1px solid var(--border); color:white; border-radius:6px; padding:8px 10px; font-size:0.8rem; outline:none;" onkeydown="if(event.key==='Enter') addCannedReply()">
+        <button onclick="addCannedReply()" style="background:var(--primary); border:none; color:white; border-radius:6px; padding:8px 10px; cursor:pointer; font-size:0.8rem;">+</button>
+      </div>
+    </div>
+    
+    <div class="tool-section">
+      <h3>📝 โน้ตลูกค้า</h3>
+      <textarea class="memo-input" id="memo-input" placeholder="จดบันทึกเกี่ยวกับลูกค้าคนนี้... (ลูกค้าจะไม่เห็น)"></textarea>
+      <button class="btn-save" id="btn-save-memo" onclick="saveMemo()">💾 บันทึกโน้ต</button>
+    </div>
+    
+    <div class="tool-section" style="margin-top:auto; border-bottom:none;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <span style="font-size:0.8rem; color:var(--text-dim);">🔔 แจ้งเตือน</span>
+        <button id="btn-notif" onclick="requestNotification()" style="background:#374151; border:none; color:#9ca3af; border-radius:6px; padding:5px 10px; cursor:pointer; font-size:0.75rem;">เปิดใช้งาน</button>
+      </div>
+      <button class="btn-end" onclick="completeChat()">✅ จบการสนทนา</button>
+      <div style="font-size:0.75rem; color:#6b7280; text-align:center; margin-top:10px;">
+        ระบบจะเอาออกจากคิว, เปลี่ยนบิลเป็นเสร็จสิ้น, และส่งข้อความให้คะแนนลูกค้า
+      </div>
+    </div>
+  </div>
+
+  </div> <!-- end app-container -->
+
+<script>
+  let currentUserId = null;
+  let isCurrentLive = false;
+  let pollingInterval = null;
+  let authToken = localStorage.getItem('readerToken') || '';
+
+  async function login() {
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value.trim();
+    try {
+      const res = await fetch('/reader/api/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user, password: pass })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      
+      authToken = data.token;
+      localStorage.setItem('readerToken', authToken);
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app-container').style.display = 'flex';
+      initApp();
+    } catch(err) {
+      document.getElementById('login-error').textContent = err.message;
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('readerToken');
+    location.reload();
+  }
+
+  async function api(method, path, body) {
+    const res = await fetch('/reader' + path, {
+      method,
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': authToken
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (res.status === 401) { logout(); throw new Error('Session expired'); }
+    return res.json();
+  }
+
+  function fmtTime(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+  }
+
+  function esc(s) { return s ? s.toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;') : ''; }
+  function parseMessageContent(text) {
+    if (!text) return '';
+    let safeText = esc(text);
+    if (text.includes('[IMAGE: ')) {
+      safeText = text.replace(/\[IMAGE: ([^\]]+)\]/g, (match, imgUrl) => {
+        return `<a href="${imgUrl}" target="_blank"><img src="${imgUrl}" style="max-width: 100%; border-radius: 8px; cursor: zoom-in; display: block; margin-top: 4px; margin-bottom: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></a>`;
+      });
+    }
+    return safeText;
+  }
+
+  // Load User List
+  async function loadUsers() {
+    try {
+      const users = await api('GET', '/api/users');
+      const list = document.getElementById('user-list');
+      document.getElementById('users-loader').style.display = 'none';
+      
+      if (!users.length) {
+        list.innerHTML = '<div style="text-align:center;color:#6b7280;margin-top:20px;font-size:.85rem">ไม่มีประวัติการคุย</div>';
+        return;
+      }
+
+      list.innerHTML = users.map(u => {
+        let previewText = u.message || '';
+        if (previewText.startsWith('[IMAGE: ')) previewText = '📷 ส่งรูปภาพ';
+        const preview = u.message ? `👤 ${previewText}` : (u.response ? `🔮 ${u.response}` : 'เริ่มการสนทนา');
+        const name = u.line_name || u.user_id.substring(0, 15) + '...';
+        const pic = u.line_picture || '';
+        const safeName = name.replace(/'/g, "\\'");
+        const safePic = pic.replace(/'/g, "\\'");
+        return `
+          <div class="user-item ${u.user_id === currentUserId ? 'active' : ''} ${u.isLive ? 'is-live' : ''}" onclick="selectUser('${u.user_id}', '${safeName}', '${safePic}')">
+            <div style="display:flex; align-items:center; gap:10px;">
+              ${pic ? `<img src="${pic}" style="width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,0.1)">` : `<div style="width:32px; height:32px; border-radius:50%; background:var(--bg-hover); display:flex; align-items:center; justify-content:center; font-size:0.7rem">👤</div>`}
+              <div style="flex:1; min-width:0;">
+                <div class="user-id" title="${u.user_id}">${name.replace(/</g, "&lt;")}</div>
+                <div class="user-preview text-dim">${preview.replace(/</g, "&lt;")}</div>
+              </div>
+            </div>
+            <div class="live-badge">LIVE</div>
+          </div>
+        `;
+      }).join('');
+    } catch(err) { console.error(err); }
+  }
+
+  // Select User & Load Chats
+  async function selectUser(userId, lineName, linePicture) {
+    currentUserId = userId;
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('chat-interface').style.display = 'flex';
+    document.getElementById('tools-sidebar').style.display = 'flex'; // Show tools
+    
+    const displayName = lineName || userId.substring(0,25) + '...';
+    document.getElementById('chat-title').innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px;">
+        ${linePicture ? `<img src="${linePicture}" style="width:32px; height:32px; border-radius:50%;">` : ''}
+        <span>${displayName}</span>
+      </div>
+    `;
+    
+    // เปิดโหมด Live Chat อัตโนมัติ เพื่อซ่อนแชทเก่าและเริ่มสนทนา
+    try {
+      const res = await api('POST', `/api/chats/${userId}/toggle-live`, { isLive: true });
+      isCurrentLive = res.isLive;
+    } catch(err) {
+      console.error('Failed to auto-enable live chat:', err);
+    }
+    
+    // Refresh user list UI to show active state
+    loadUsers();
+    await refreshChat();
+    loadMemo(); // Load memo for selected user
+    resetTimer(); // Reset timer when switching user
+
+    // Start polling for new messages every 3 seconds
+    if (pollingInterval) clearInterval(pollingInterval);
+    pollingInterval = setInterval(refreshChat, 3000);
+  }
+
+  let lastMessageCount = 0;
+
+  async function refreshChat() {
+    if (!currentUserId) return;
+    try {
+      const data = await api('GET', `/api/chats/${currentUserId}`);
+      
+      // 🔔 Browser Notification: detect new customer messages
+      const newCount = data.chats.filter(c => c.message).length;
+      if (lastMessageCount > 0 && newCount > lastMessageCount && document.hidden) {
+        const lastMsg = data.chats.filter(c => c.message).pop();
+        if (lastMsg) triggerNotification(lastMsg.message);
+      }
+      lastMessageCount = newCount;
+
+      renderChats(data.chats);
+      
+      // Update toggle state
+      isCurrentLive = data.isLive;
+      const toggleBtn = document.getElementById('live-toggle');
+      if (toggleBtn.checked !== isCurrentLive) {
+        toggleBtn.checked = isCurrentLive;
+      }
+      updateUIState();
+    } catch (err) { console.error(err); }
+  }
+
+  function renderChats(chats) {
+    const box = document.getElementById('chat-box');
+    // Save scroll pos to prevent jumping if user scrolled up
+    const isAtBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 50;
+
+    box.innerHTML = chats.map(c => {
+      let html = '';
+      // ข้อความลูกค้า (ซ้าย)
+      if (c.message) {
+        const isPureImage = c.message.startsWith('[IMAGE: ') && c.message.endsWith(']');
+        const parsedContent = parseMessageContent(c.message);
+        
+        html += `
+          <div class="msg-wrap left">
+            <div class="msg-sender">ลูกค้า</div>
+            <div class="msg-bubble" style="${isPureImage ? 'padding: 0; background: transparent;' : ''}">${parsedContent}</div>
+            <div class="msg-time">${fmtTime(c.created_at)}</div>
+          </div>
+        `;
+      }
+      // ข้อความบอท หรือ หมอดู (ขวา)
+      if (c.response) {
+        const isReader = c.response.startsWith('👩‍🔮 [หมอดู]:');
+        const text = isReader ? c.response.replace('👩‍🔮 [หมอดู]:', '').trim() : c.response;
+        const parsedContent = parseMessageContent(text);
+        
+        html += `
+          <div class="msg-wrap right ${isReader ? 'reader' : ''}">
+            <div class="msg-sender">${isReader ? '👩‍🔮 คุณ (หมอดู)' : '🤖 บอท AI'}</div>
+            <div class="msg-bubble">${parsedContent}</div>
+            <div class="msg-time">${fmtTime(c.created_at)}</div>
+          </div>
+        `;
+      }
+      return html;
+    }).join('');
+
+    if (isAtBottom) box.scrollTop = box.scrollHeight;
+  }
+
+  // Toggle Live Status
+  async function toggleLiveStatus(state) {
+    if (!currentUserId) return;
+    try {
+      const res = await api('POST', `/api/chats/${currentUserId}/toggle-live`, { isLive: state });
+      isCurrentLive = res.isLive;
+      updateUIState();
+      loadUsers(); // Refresh badges
+    } catch(err) {
+      document.getElementById('live-toggle').checked = !state; // revert
+      alert('เกิดข้อผิดพลาด: ' + err.message);
+    }
+  }
+
+  function updateUIState() {
+    const statusText = document.getElementById('live-status-text');
+    const input = document.getElementById('chat-input');
+    const btn = document.getElementById('btn-send');
+    
+    if (isCurrentLive) {
+      statusText.textContent = '🔴 Live Chat (คุณตอบเอง)';
+      statusText.classList.add('active');
+      input.disabled = false;
+      btn.disabled = false;
+      input.placeholder = "พิมพ์ข้อความตอบกลับลูกค้า...";
+    } else {
+      statusText.textContent = '🤖 บอท AI ทำงาน';
+      statusText.classList.remove('active');
+      input.disabled = true;
+      btn.disabled = true;
+      input.placeholder = "ต้องเปิดโหมด Live Chat ก่อนถึงจะพิมพ์ตอบได้";
+      input.value = '';
+    }
+  }
+
+  // Send Message
+  async function sendMessage() {
+    if (!isCurrentLive || !currentUserId) return;
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.disabled = true;
+    const btn = document.getElementById('btn-send');
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+      await api('POST', `/api/chats/${currentUserId}/send`, { message: text });
+      input.value = '';
+      await refreshChat();
+    } catch(err) {
+      alert('ส่งข้อความไม่สำเร็จ: ' + err.message);
+    } finally {
+      input.disabled = false;
+      btn.disabled = false;
+      btn.textContent = 'ส่ง';
+      input.focus();
+    }
+  }
+
+  // ── Memo System ──────────────────────────────────
+  async function loadMemo() {
+    try {
+      document.getElementById('memo-input').value = 'กำลังโหลด...';
+      const data = await api('GET', `/api/chats/${currentUserId}/memo`);
+      document.getElementById('memo-input').value = data.memo || '';
+    } catch(err) {
+      console.error(err);
+      document.getElementById('memo-input').value = '';
+    }
+  }
+
+  async function saveMemo() {
+    if (!currentUserId) return;
+    const btn = document.getElementById('btn-save-memo');
+    const memo = document.getElementById('memo-input').value;
+    btn.textContent = 'กำลังบันทึก...';
+    try {
+      await api('POST', `/api/chats/${currentUserId}/memo`, { memo });
+      btn.textContent = '✅ บันทึกสำเร็จ';
+      setTimeout(() => btn.textContent = '💾 บันทึกโน้ต', 2000);
+    } catch(err) {
+      console.error(err);
+      btn.textContent = '❌ บันทึกไม่สำเร็จ';
+      setTimeout(() => btn.textContent = '💾 บันทึกโน้ต', 2000);
+    }
+  }
+
+  // ── Timer System ──────────────────────────────────
+  let timerInterval = null;
+  let timeLeft = 30 * 60; // 30 minutes in seconds
+  let isTimerRunning = false;
+
+  function updateTimerDisplay() {
+    const display = document.getElementById('timer-display');
+    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    const s = (timeLeft % 60).toString().padStart(2, '0');
+    display.textContent = `${m}:${s}`;
+    
+    display.classList.remove('warning', 'danger');
+    if (timeLeft <= 5 * 60 && timeLeft > 0) display.classList.add('warning');
+    if (timeLeft <= 0) display.classList.add('danger');
+  }
+
+  function toggleTimer() {
+    const btn = document.getElementById('btn-timer-toggle');
+    if (isTimerRunning) {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      btn.textContent = 'เล่นต่อ';
+      btn.style.background = '#f59e0b';
+    } else {
+      isTimerRunning = true;
+      btn.textContent = 'หยุดชั่วคราว';
+      btn.style.background = '#f59e0b';
+      timerInterval = setInterval(() => {
+        if (timeLeft > 0) {
+          timeLeft--;
+          updateTimerDisplay();
+        } else {
+          clearInterval(timerInterval);
+          isTimerRunning = false;
+          btn.textContent = 'หมดเวลา';
+          btn.style.background = '#ef4444';
+        }
+      }, 1000);
+    }
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    isTimerRunning = false;
+    timeLeft = 30 * 60;
+    updateTimerDisplay();
+    const btn = document.getElementById('btn-timer-toggle');
+    btn.textContent = 'เริ่มจับเวลา';
+    btn.style.background = '#10b981';
+  }
+
+  // ── End Consultation ──────────────────────────────
+  async function completeChat() {
+    if (!currentUserId) return;
+    if (!confirm('ยืนยันจบการสนทนาสำหรับลูกค้ารายนี้?\n(ระบบจะเอาลูกค้าออกจากคิว, ปิดสถานะจอง, และส่งข้อความให้คะแนนลูกค้า)')) return;
+    
+    try {
+      await api('POST', `/api/chats/${currentUserId}/complete`);
+      
+      // Clear UI without alert to feel realtime
+      currentUserId = null;
+      document.getElementById('chat-interface').style.display = 'none';
+      document.getElementById('tools-sidebar').style.display = 'none';
+      document.getElementById('empty-state').style.display = 'flex';
+      if (pollingInterval) clearInterval(pollingInterval);
+      
+      loadUsers();
+    } catch(err) {
+      alert('เกิดข้อผิดพลาด: ' + err.message);
+    }
+  }
+
+  // ── Canned Replies ────────────────────────────────
+  const DEFAULT_CANNED = [
+    'สวัสดีค่ะ กำลังวิเคราะห์ให้นะคะ 🔮',
+    'รบกวนรอสักครู่นะคะ กำลังเตรียมคำทำนายค่ะ 🙏',
+    'ขอถามเพิ่มเติมได้ไหมคะ เพื่อให้คำทำนายแม่นยำขึ้นค่ะ ✨',
+    'ขอบคุณที่ใช้บริการนะคะ หากมีคำถามเพิ่มเติมยินดีช่วยค่ะ 💕',
+    'ดีจังอ่านดวงเสร็จแล้วค่ะ ขอบคุณที่ไว้วางใจนะคะ 🌟',
+  ];
+
+  function loadCannedReplies() {
+    const saved = JSON.parse(localStorage.getItem('cannedReplies') || 'null');
+    const replies = saved || DEFAULT_CANNED;
+    renderCannedReplies(replies);
+  }
+
+  function renderCannedReplies(replies) {
+    const container = document.getElementById('canned-replies');
+    container.innerHTML = replies.map((r, i) => `
+      <div style="display:flex; gap:6px; align-items:center;">
+        <button onclick="useCannedReply(${i})" title="${r.replace(/"/g,'&quot;')}" style="flex:1; text-align:left; background:#0d0d14; border:1px solid var(--border); color:var(--text); border-radius:6px; padding:7px 10px; cursor:pointer; font-size:0.78rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; transition:0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">${r}</button>
+        <button onclick="deleteCannedReply(${i})" style="flex-shrink:0; background:transparent; border:none; color:#6b7280; cursor:pointer; font-size:0.85rem; padding:4px;" title="ลบ">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function useCannedReply(index) {
+    const saved = JSON.parse(localStorage.getItem('cannedReplies') || 'null');
+    const replies = saved || DEFAULT_CANNED;
+    const input = document.getElementById('chat-input');
+    input.value = replies[index];
+    input.focus();
+    if (isCurrentLive) {
+      document.getElementById('btn-send').disabled = false;
+    }
+  }
+
+  function addCannedReply() {
+    const input = document.getElementById('new-canned-input');
+    const text = input.value.trim();
+    if (!text) return;
+    const saved = JSON.parse(localStorage.getItem('cannedReplies') || 'null');
+    const replies = saved || [...DEFAULT_CANNED];
+    replies.push(text);
+    localStorage.setItem('cannedReplies', JSON.stringify(replies));
+    renderCannedReplies(replies);
+    input.value = '';
+  }
+
+  function deleteCannedReply(index) {
+    const saved = JSON.parse(localStorage.getItem('cannedReplies') || 'null');
+    const replies = saved || [...DEFAULT_CANNED];
+    replies.splice(index, 1);
+    localStorage.setItem('cannedReplies', JSON.stringify(replies));
+    renderCannedReplies(replies);
+  }
+
+  // ── Browser Notifications ──────────────────────────
+  function requestNotification() {
+    if (!('Notification' in window)) {
+      alert('เบราว์เซอร์นี้ไม่รองรับ Notification ค่ะ');
+      return;
+    }
+    Notification.requestPermission().then(p => {
+      const btn = document.getElementById('btn-notif');
+      if (p === 'granted') {
+        btn.textContent = '✅ เปิดแล้ว';
+        btn.style.background = '#065f46';
+        btn.style.color = '#6ee7b7';
+        new Notification('🔔 DD Jang Reader', { body: 'เปิดรับการแจ้งเตือนข้อความใหม่เรียบร้อยแล้วค่ะ!', icon: '/public/images/logo.png' });
+      } else {
+        btn.textContent = '❌ ถูกบล็อก';
+        btn.style.color = '#fca5a5';
+      }
+    });
+  }
+
+  function triggerNotification(message) {
+    if (Notification.permission !== 'granted') return;
+    const preview = message.startsWith('[IMAGE: ') ? '📷 ส่งรูปภาพ' : message.substring(0, 80);
+    new Notification('💬 มีข้อความใหม่จากลูกค้า', {
+      body: preview,
+      icon: '/public/images/logo.png',
+      badge: '/public/images/logo.png',
+      requireInteraction: false,
+    });
+  }
+
+  // Init
+  function initApp() {
+    loadUsers();
+    loadCannedReplies();
+    setInterval(loadUsers, 10000);
+    // Check existing notification permission
+    if (Notification.permission === 'granted') {
+      const btn = document.getElementById('btn-notif');
+      if (btn) { btn.textContent = '✅ เปิดแล้ว'; btn.style.background = '#065f46'; btn.style.color = '#6ee7b7'; }
+    }
+  }
+
+  // Check auth on load
+  if (authToken) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-container').style.display = 'flex';
+    initApp();
+  }
+</script>
+</body>
+</html>
