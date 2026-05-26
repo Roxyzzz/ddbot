@@ -16,9 +16,10 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background: #0a0a0f;
-      color: #e2e8f0;
-      min-height: 100vh
+      background: var(--bg1);
+      color: var(--text-secondary);
+      min-height: 100vh;
+      transition: background .3s, color .3s;
     }
 
     /* LINE Simulator frame */
@@ -39,7 +40,44 @@
       --bg1: #0a0a0f;
       --bg2: #111118;
       --bg3: #1a1a26;
-      --border: rgba(255, 255, 255, .08)
+      --border: rgba(255, 255, 255, .08);
+      --sidebar-bg: #0d0d1a;
+      --text-primary: #f1f5f9;
+      --text-secondary: #e2e8f0;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --input-bg: #0d0d1a;
+      --hover-bg: rgba(255, 255, 255, .04);
+      --hover-border: rgba(255,255,255,.12);
+      --row-hover: rgba(255, 255, 255, .02);
+      --row-border: rgba(255, 255, 255, .04);
+      --bubble-user-bg: #1e3a5f;
+      --bubble-user-border: rgba(59, 130, 246, .25);
+      --bubble-bot-bg: rgba(124, 58, 237, .12);
+      --bubble-bot-border: rgba(124, 58, 237, .25);
+      --chart-bg: #111;
+    }
+
+    [data-theme="light"] {
+      --bg1: #f0f2f5;
+      --bg2: #e8eaed;
+      --bg3: #ffffff;
+      --border: rgba(0, 0, 0, .1);
+      --sidebar-bg: #1e293b;
+      --text-primary: #1e293b;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      --input-bg: #f8fafc;
+      --hover-bg: rgba(0, 0, 0, .04);
+      --hover-border: rgba(0,0,0,.15);
+      --row-hover: rgba(0, 0, 0, .02);
+      --row-border: rgba(0, 0, 0, .06);
+      --bubble-user-bg: #dbeafe;
+      --bubble-user-border: rgba(59, 130, 246, .3);
+      --bubble-bot-bg: rgba(124, 58, 237, .08);
+      --bubble-bot-border: rgba(124, 58, 237, .2);
+      --chart-bg: #f1f5f9;
     }
 
     /* Layout */
@@ -49,17 +87,48 @@
       top: 0;
       width: 220px;
       height: 100vh;
-      background: #0d0d1a;
+      background: var(--sidebar-bg);
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      z-index: 100
+      z-index: 100;
+      transition: background .3s;
     }
 
     .main {
       margin-left: 220px;
       min-height: 100vh;
       padding: 28px
+    }
+
+    /* ── Animations ─────────────────────────────── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, .5); }
+      50%      { box-shadow: 0 0 8px 4px rgba(239, 68, 68, .25); }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     /* Sidebar */
@@ -72,11 +141,13 @@
     .brand h1 {
       font-size: 1rem;
       font-weight: 700;
-      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      background: linear-gradient(90deg, var(--gold), var(--gold2), #fff, var(--gold));
+      background-size: 200% auto;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      color: transparent
+      color: transparent;
+      animation: shimmer 3s ease-in-out infinite;
     }
 
     /* stylelint-enable property-no-vendor-prefix */
@@ -98,14 +169,26 @@
       padding: 11px 20px;
       cursor: pointer;
       font-size: .82rem;
-      color: #9ca3af;
+      color: var(--text-muted);
       border-left: 3px solid transparent;
-      transition: .2s
+      transition: all .25s cubic-bezier(.4,0,.2,1);
+      animation: slideInLeft .4s ease-out backwards;
     }
+    .nav-item:nth-child(1) { animation-delay: .05s; }
+    .nav-item:nth-child(2) { animation-delay: .1s; }
+    .nav-item:nth-child(3) { animation-delay: .15s; }
+    .nav-item:nth-child(4) { animation-delay: .2s; }
+    .nav-item:nth-child(5) { animation-delay: .25s; }
+    .nav-item:nth-child(6) { animation-delay: .3s; }
+    .nav-item:nth-child(7) { animation-delay: .35s; }
+    .nav-item:nth-child(8) { animation-delay: .4s; }
+    .nav-item:nth-child(9) { animation-delay: .45s; }
+    .nav-item:nth-child(10) { animation-delay: .5s; }
 
     .nav-item:hover {
-      color: #e2e8f0;
-      background: rgba(255, 255, 255, .04)
+      color: var(--text-secondary);
+      background: var(--hover-bg);
+      padding-left: 24px;
     }
 
     .nav-item.active {
@@ -117,7 +200,11 @@
     .nav-item .icon {
       font-size: 1rem;
       width: 20px;
-      text-align: center
+      text-align: center;
+      transition: transform .2s;
+    }
+    .nav-item:hover .icon {
+      transform: scale(1.2);
     }
 
     .badge {
@@ -126,7 +213,8 @@
       font-size: .65rem;
       border-radius: 99px;
       padding: 1px 6px;
-      margin-left: auto
+      margin-left: auto;
+      animation: pulseGlow 2s ease-in-out infinite;
     }
 
     /* Cards */
@@ -135,14 +223,16 @@
     }
 
     .page.active {
-      display: block
+      display: block;
+      animation: fadeIn .35s ease-out;
     }
 
     .page-title {
       font-size: 1.25rem;
       font-weight: 700;
       margin-bottom: 20px;
-      color: #f1f5f9
+      color: var(--text-primary);
+      animation: fadeInUp .4s ease-out;
     }
 
     .stats-grid {
@@ -158,7 +248,21 @@
       border-radius: 12px;
       padding: 20px;
       position: relative;
-      overflow: hidden
+      overflow: hidden;
+      animation: fadeInUp .5s ease-out backwards;
+      transition: all .3s cubic-bezier(.4,0,.2,1);
+    }
+    .stat-card:nth-child(1) { animation-delay: .05s; }
+    .stat-card:nth-child(2) { animation-delay: .1s; }
+    .stat-card:nth-child(3) { animation-delay: .15s; }
+    .stat-card:nth-child(4) { animation-delay: .2s; }
+    .stat-card:nth-child(5) { animation-delay: .25s; }
+    .stat-card:nth-child(6) { animation-delay: .3s; }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(245, 158, 11, .3);
+      box-shadow: 0 8px 24px rgba(245, 158, 11, .08);
     }
 
     .stat-card::before {
@@ -171,7 +275,7 @@
 
     .stat-card .label {
       font-size: .72rem;
-      color: #6b7280;
+      color: var(--text-dim);
       text-transform: uppercase;
       letter-spacing: .05em
     }
@@ -179,8 +283,9 @@
     .stat-card .value {
       font-size: 2rem;
       font-weight: 700;
-      color: #f1f5f9;
-      margin: 6px 0
+      color: var(--text-primary);
+      margin: 6px 0;
+      animation: countUp .6s ease-out backwards;
     }
 
     .stat-card .icon {
@@ -188,7 +293,12 @@
       right: 16px;
       top: 16px;
       font-size: 1.5rem;
-      opacity: .3
+      opacity: .3;
+      transition: all .3s;
+    }
+    .stat-card:hover .icon {
+      opacity: .6;
+      transform: scale(1.15) rotate(-5deg);
     }
 
     /* Tables */
@@ -197,7 +307,13 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
-      margin-bottom: 20px
+      margin-bottom: 20px;
+      animation: fadeInUp .5s ease-out backwards;
+      animation-delay: .15s;
+      transition: border-color .3s;
+    }
+    .card:hover {
+      border-color: var(--hover-border);
     }
 
     .card-header {
@@ -222,7 +338,7 @@
     th {
       padding: 10px 16px;
       text-align: left;
-      color: #6b7280;
+      color: var(--text-dim);
       font-weight: 500;
       border-bottom: 1px solid var(--border);
       white-space: nowrap
@@ -230,7 +346,7 @@
 
     td {
       padding: 11px 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, .04);
+      border-bottom: 1px solid var(--row-border);
       vertical-align: middle
     }
 
@@ -239,7 +355,7 @@
     }
 
     tr:hover td {
-      background: rgba(255, 255, 255, .02)
+      background: var(--row-hover)
     }
 
     /* Buttons */
@@ -254,7 +370,10 @@
       font-size: .78rem;
       font-weight: 500;
       font-family: inherit;
-      transition: .2s
+      transition: all .25s cubic-bezier(.4,0,.2,1);
+    }
+    .btn:active {
+      transform: scale(0.95);
     }
 
     .btn-green {
@@ -309,7 +428,8 @@
     }
 
     .slip-img:hover {
-      transform: scale(1.08)
+      transform: scale(1.08);
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
     }
 
     /* Modal */
@@ -333,7 +453,8 @@
       border-radius: 16px;
       padding: 28px;
       min-width: 340px;
-      max-width: 92vw
+      max-width: 92vw;
+      animation: scaleIn .3s cubic-bezier(.4,0,.2,1);
     }
 
     .modal h3 {
@@ -349,20 +470,21 @@
     .form-group label {
       display: block;
       font-size: .78rem;
-      color: #9ca3af;
+      color: var(--text-muted);
       margin-bottom: 6px
     }
 
     .form-group input {
       width: 100%;
-      background: #0d0d1a;
+      background: var(--input-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 10px 12px;
-      color: #e2e8f0;
+      color: var(--text-secondary);
       font-size: .85rem;
       font-family: inherit;
-      outline: none
+      outline: none;
+      transition: background .3s, color .3s;
     }
 
     .form-group input:focus {
@@ -383,15 +505,16 @@
       border-radius: 14px;
       overflow: hidden;
       cursor: pointer;
-      transition: all .2s;
+      transition: all .3s cubic-bezier(.4,0,.2,1);
       display: flex;
-      flex-direction: column
+      flex-direction: column;
+      animation: fadeInUp .5s ease-out backwards;
     }
 
     .chat-user-card:hover {
       border-color: var(--blue);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(59, 130, 246, .15)
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 12px 32px rgba(59, 130, 246, .18)
     }
 
     .chat-card-header {
@@ -456,8 +579,8 @@
     .bubble-user {
       align-self: flex-end;
       max-width: 78%;
-      background: #1e3a5f;
-      border: 1px solid rgba(59, 130, 246, .25);
+      background: var(--bubble-user-bg);
+      border: 1px solid var(--bubble-user-border);
       border-radius: 16px 16px 4px 16px;
       padding: 10px 14px
     }
@@ -465,8 +588,8 @@
     .bubble-bot {
       align-self: flex-start;
       max-width: 78%;
-      background: rgba(124, 58, 237, .12);
-      border: 1px solid rgba(124, 58, 237, .25);
+      background: var(--bubble-bot-bg);
+      border: 1px solid var(--bubble-bot-border);
       border-radius: 16px 16px 16px 4px;
       padding: 10px 14px
     }
@@ -482,7 +605,7 @@
 
     .bubble-time {
       font-size: .62rem;
-      color: #6b7280;
+      color: var(--text-dim);
       margin-bottom: 3px
     }
 
@@ -855,6 +978,18 @@
       <div class="nav-item" id="nav-settings" onclick="showPage(this,'settings')"><span
           class="icon">⚙️</span><span>Settings</span></div>
     </nav>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:.75rem;color:var(--text-muted)">🔔 แจ้งเตือน</span>
+      <button id="btn-admin-notif" onclick="requestAdminNotification()" style="background:#374151; border:none; color:#9ca3af; border-radius:6px; padding:4px 8px; cursor:pointer; font-size:0.7rem; font-family:inherit; transition:0.2s;">เปิดใช้งาน</button>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:.75rem;color:var(--text-muted)">🌙 Dark Mode</span>
+      <label id="theme-toggle-label" style="position:relative;width:44px;height:24px;cursor:pointer;">
+        <input type="checkbox" id="theme-toggle" onchange="toggleTheme()" style="display:none">
+        <span id="theme-slider" style="position:absolute;inset:0;background:var(--gold);border-radius:12px;transition:.3s;"></span>
+        <span id="theme-knob" style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
+      </label>
+    </div>
   </div>
 
   <div class="main">
@@ -1475,6 +1610,89 @@
   </div>
 
   <script>
+    // ── Theme Toggle ────────────────────────────────────
+    (function() {
+      const saved = localStorage.getItem('admin-theme');
+      if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isLight = html.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        html.removeAttribute('data-theme');
+        localStorage.setItem('admin-theme', 'dark');
+      } else {
+        html.setAttribute('data-theme', 'light');
+        localStorage.setItem('admin-theme', 'light');
+      }
+      updateThemeUI();
+    }
+
+    function updateThemeUI() {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      const toggle = document.getElementById('theme-toggle');
+      const knob = document.getElementById('theme-knob');
+      const slider = document.getElementById('theme-slider');
+      const label = document.querySelector('#theme-toggle-label').parentElement.querySelector('span');
+      if (toggle) toggle.checked = !isLight;
+      if (knob) knob.style.left = isLight ? '2px' : '22px';
+      if (slider) slider.style.background = isLight ? '#cbd5e1' : 'var(--gold)';
+      if (label) label.textContent = isLight ? '☀️ Light Mode' : '🌙 Dark Mode';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updateThemeUI();
+      if ('Notification' in window) updateAdminNotifBtn(Notification.permission);
+      pollGlobalNotifications(); // initial fetch for badges
+    });
+
+    // ── Notifications ───────────────────────────────────
+    let lastPendingSlips = null;
+    let lastPendingBookings = null;
+
+    function requestAdminNotification() {
+      if (!('Notification' in window)) return alert('เบราว์เซอร์ไม่รองรับ Notification ค่ะ');
+      Notification.requestPermission().then(p => {
+        updateAdminNotifBtn(p);
+        if (p === 'granted') new Notification('🔔 DD Jang Admin', { body: 'เปิดรับการแจ้งเตือนสำเร็จแล้วค่ะ!', icon: '/public/images/logo.png' });
+      });
+    }
+
+    function updateAdminNotifBtn(p) {
+      const btn = document.getElementById('btn-admin-notif');
+      if (!btn) return;
+      if (p === 'granted') { btn.textContent = '✅ เปิดแล้ว'; btn.style.background = '#065f46'; btn.style.color = '#6ee7b7'; }
+      else if (p === 'denied') { btn.textContent = '❌ ถูกบล็อก'; btn.style.color = '#fca5a5'; }
+    }
+
+    async function pollGlobalNotifications() {
+      try {
+        const d = await api('GET', '/api/stats');
+        const bc = await api('GET', '/api/bookings/count').catch(()=>({count:0}));
+        
+        // Update badges
+        const slipBadge = document.getElementById('slip-badge');
+        if (d.pendingCount > 0) { slipBadge.textContent = d.pendingCount; slipBadge.style.display = ''; } else { slipBadge.style.display = 'none'; }
+        
+        const bookingBadge = document.getElementById('booking-badge');
+        if (bc.count > 0) { bookingBadge.textContent = bc.count; bookingBadge.style.display = ''; } else { bookingBadge.style.display = 'none'; }
+        
+        // Notify
+        if (Notification.permission === 'granted') {
+           if (lastPendingSlips !== null && d.pendingCount > lastPendingSlips) {
+              new Notification('💳 มีสลิปใหม่รอตรวจ', { body: `มีสลิปใหม่เข้ามารอตรวจสอบ ${d.pendingCount - lastPendingSlips} รายการ`, icon: '/public/images/logo.png' });
+           }
+           if (lastPendingBookings !== null && bc.count > lastPendingBookings) {
+              new Notification('📅 มีการจองคิวใหม่', { body: `มีลูกค้าจองคิวใหม่ ${bc.count - lastPendingBookings} รายการ`, icon: '/public/images/logo.png' });
+           }
+        }
+        
+        lastPendingSlips = d.pendingCount;
+        lastPendingBookings = bc.count;
+      } catch (err) { console.error('Polling error', err); }
+    }
+
     let currentSlipId = null;
     let allUsers = [];
     let availableReaders = [];
@@ -1504,9 +1722,10 @@
       if (currentPage === 'settings') loadSettings();
     }
 
-    // Polling every 15 seconds to keep data real-time without refreshing
+    // Polling every 15 seconds to keep data real-time
     if (pollingInterval) clearInterval(pollingInterval);
     pollingInterval = setInterval(() => {
+      pollGlobalNotifications(); // Always poll for badges & notifications
       if (!document.hidden && ['dashboard', 'slips', 'bookings'].includes(currentPage)) {
         refreshCurrentPage();
       }
@@ -1552,19 +1771,8 @@
       document.getElementById('stat-today-revenue').textContent = (d.todayRevenue || 0).toLocaleString() + ' ฿';
       document.getElementById('stat-total-revenue').textContent = (d.totalRevenue || 0).toLocaleString() + ' ฿';
       updateStripeToggleUI(d.stripeEnabled);
-      if (d.pendingCount > 0) {
-        document.getElementById('slip-badge').textContent = d.pendingCount;
-        document.getElementById('slip-badge').style.display = '';
-      }
       const tb = document.getElementById('top-services');
       tb.innerHTML = (d.topServices || []).map(s => `<tr><td>${s.service}</td><td><strong>${s.count}</strong></td></tr>`).join('');
-      // booking badge
-      try {
-        const bc = await api('GET', '/api/bookings/count');
-        const badge = document.getElementById('booking-badge');
-        if (bc.count > 0) { badge.textContent = bc.count; badge.style.display = ''; }
-        else { badge.style.display = 'none'; }
-      } catch (_) { }
     }
 
     function updateStripeToggleUI(enabled) {
@@ -1731,23 +1939,38 @@
     async function confirmBooking(id) {
       const confirmedDate = prompt('กำหนดวัน/เวลานัดหมายให้ลูกค้า (เช่น 20 พ.ค. 14:00)');
       if (!confirmedDate) return;
-      await api('POST', `/api/bookings/${id}/confirm`, { confirmedDate });
-      loadBookings(document.getElementById('booking-filter').value);
-      loadDashboard();
+      try {
+        const res = await api('POST', `/api/bookings/${id}/confirm`, { confirmedDate });
+        if (res.error) throw new Error(res.error);
+        loadBookings(document.getElementById('booking-filter').value);
+        loadDashboard();
+      } catch (err) {
+        alert('เกิดข้อผิดพลาด: ' + err.message);
+      }
     }
     
     async function rejectBooking(id) {
       if (!confirm('ยืนยันปฏิเสธคิวจองนี้?')) return;
-      await api('POST', `/api/bookings/${id}/reject`, {});
-      loadBookings(document.getElementById('booking-filter').value);
-      loadDashboard();
+      try {
+        const res = await api('POST', `/api/bookings/${id}/reject`, {});
+        if (res.error) throw new Error(res.error);
+        loadBookings(document.getElementById('booking-filter').value);
+        loadDashboard();
+      } catch (err) {
+        alert('เกิดข้อผิดพลาด: ' + err.message);
+      }
     }
     
     async function completeBooking(id) {
       if (!confirm('ยืนยันเสร็จสิ้นคิวจองนี้? (จบการดูดวงแล้ว)')) return;
-      await api('POST', `/api/bookings/${id}/complete`, {});
-      loadBookings(document.getElementById('booking-filter').value);
-      loadDashboard();
+      try {
+        const res = await api('POST', `/api/bookings/${id}/complete`, {});
+        if (res.error) throw new Error(res.error);
+        loadBookings(document.getElementById('booking-filter').value);
+        loadDashboard();
+      } catch (err) {
+        alert('เกิดข้อผิดพลาด: ' + err.message);
+      }
     }
 
     // ── VIP ─────────────────────────────────────────────

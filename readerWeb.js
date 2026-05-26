@@ -11,7 +11,8 @@ const sessionStartTimes = new Map();
 
 router.use('/public', express.static(path.join(__dirname, 'public/reader')));
 router.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/reader/index.html'));
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.sendFile(path.join(__dirname, 'public', 'reader', 'index.html'));
 });
 
 function requireReaderAuth(req, res, next) {
@@ -20,8 +21,10 @@ function requireReaderAuth(req, res, next) {
   try {
     const decoded = Buffer.from(token, 'base64').toString('utf-8');
     const [id, username, name] = decoded.split(':');
-    if (!id || !username) throw new Error();
-    req.reader = { id: parseInt(id), username, name };
+    if (!id || !username) throw new Error('Invalid token');
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) throw new Error('Old token format');
+    req.reader = { id: parsedId, username, name };
     next();
   } catch (err) {
     res.status(401).json({ error: 'Invalid Token' });
@@ -138,11 +141,11 @@ router.post('/api/chats/:userId/complete', requireReaderAuth, async (req, res) =
       let messages = [];
       if (completedBookings && completedBookings.length > 0) {
         for (const b of completedBookings) {
-          messages.push({ type: 'flex', altText: 'ขอบคุณที่ใช้บริการดูดวง', contents: buildBookingFlexMessage(b, 'เสร็จสิ้นการดูดวง') });
+          messages.push({ type: 'flex', altText: 'ขอบคุณที่ใช้บริการดูดวง', contents: await buildBookingFlexMessage(b, 'เสร็จสิ้นการดูดวง') });
         }
       } else {
         messages.push({ type: 'text', text: 'การดูดวงเสร็จสิ้นเรียบร้อยแล้วค่ะ ขอบคุณที่ใช้บริการดีจังนะคะ! 💕' });
-        messages.push(buildRatingFlexMessage());
+        messages.push(await buildRatingFlexMessage());
       }
       await lineClient.pushMessage({ to: userId, messages });
     }

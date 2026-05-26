@@ -55,6 +55,10 @@ async function initDB() {
     await pool.execute('ALTER TABLE bookings ADD COLUMN reader_id INT NULL AFTER user_id');
   } catch (e) {}
 
+  try {
+    await pool.execute('ALTER TABLE bookings ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+  } catch (e) {}
+
   await pool.execute(`CREATE TABLE IF NOT EXISTS readers (
     id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL, name VARCHAR(255) NOT NULL,
