@@ -493,17 +493,14 @@ router.post('/api/broadcast', express.json(), async (req, res) => {
 router.get('/api/live-chats', async (req, res) => {
   const state = req.app.get('userLiveChatState');
   if (!state) return res.json([]);
-  // Get users' info from DB to enrich the chat display
-  const { getAllUsers } = require('./database');
-  const allUsers = await getAllUsers();
+  
   const chats = [];
   for (const [userId, chat] of state.entries()) {
     if (chat.active) {
-      const u = allUsers.find(x => x.user_id === userId);
       chats.push({
         userId,
-        name: u ? u.line_name : 'ผู้ใช้ (' + userId.slice(-4) + ')',
-        pic: u ? u.line_picture : null,
+        name: chat.name || 'ผู้ใช้ (' + userId.slice(-4) + ')',
+        pic: chat.pic || null,
         unread: chat.unread,
         messages: chat.messages,
         startTime: chat.startTime

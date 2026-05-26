@@ -1046,8 +1046,19 @@ async function handleEvent(event) {
   const textLower = userMessage.toLowerCase();
   if (textLower.includes('ติดต่อแอดมิน') || textLower.includes('คุยกับคน') || textLower.includes('แอดมิน')) {
     if (!userLiveChatState.has(userId)) {
+      // ดึงข้อมูลโปรไฟล์มาเก็บไว้ใน state ทันทีเพื่อลดภาระ Database ตอน Polling
+      client.getProfile(userId).then(profile => {
+        const state = userLiveChatState.get(userId);
+        if (state) {
+          state.name = profile.displayName;
+          state.pic = profile.pictureUrl;
+        }
+      }).catch(()=>{});
+
       userLiveChatState.set(userId, { 
-        active: true, 
+        active: true,
+        name: 'ผู้ใช้ (' + userId.slice(-4) + ')',
+        pic: null,
         startTime: Date.now(), 
         unread: 1, 
         messages: [{ sender: 'user', text: userMessage, time: Date.now() }] 
