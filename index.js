@@ -5,7 +5,7 @@ const fs = require('fs');
 const line = require('@line/bot-sdk');
 const axios = require('axios');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { getCredit, addCredit, useCredit, getReferralCode, applyReferralCode, hasActiveSubscription, activateSubscription, revokeSubscription, getAllVIPs, getSubscriptionInfo, canUseSubscriptionDaily, recordSubscriptionRead, getUserProfile, saveReading, hasDailyReadingToday, getReadingStats, getGlobalStats, saveUserDOB, getUserDOB, addPendingSlip, addPendingAngPao, addStripeRecord, saveChatLog, updateLastFaceReadingLog, updateLastPalmReadingLog, createBooking, getUserBookings, ensureUserExists, updateLineProfile, isStripeEnabled, saveAITrainingData, updateAIRating } = require('./database');
+const { getCredit, addCredit, useCredit, getReferralCode, applyReferralCode, hasActiveSubscription, activateSubscription, revokeSubscription, getAllVIPs, getSubscriptionInfo, canUseSubscriptionDaily, recordSubscriptionRead, getUserProfile, saveReading, hasDailyReadingToday, getReadingStats, getGlobalStats, saveUserDOB, getUserDOB, addPendingSlip, addPendingAngPao, addStripeRecord, saveChatLog, updateLastFaceReadingLog, updateLastPalmReadingLog, createBooking, getUserBookings, ensureUserExists, updateLineProfile, isStripeEnabled, saveAITrainingData, updateAIRating, addReaderRating } = require('./database');
 const { buildBookingFlexMessage, buildPaymentMenuFlex, buildPaymentSuccessFlex, buildRatingFlexMessage, buildProfileFlexMessage } = require('./flexMessages');
 
 const { generatePromptPayQR } = require('./promptpay');
@@ -640,6 +640,9 @@ app.post('/webhook', line.middleware(config), async (req, res) => {
 const userLiveChatState = new Map();
 app.set('userLiveChatState', userLiveChatState);
 
+const pendingBookingCompletions = new Map();
+app.set('pendingBookingCompletions', pendingBookingCompletions);
+
 // Map เก็บว่า user กำลังจะส่งสลิปประเภทไหน ('subscription' | 'credit')
 const userPendingSlipAction = new Map();
 // Map เก็บว่า user กำลังจะส่งลิงก์ Ang Pao ชนิดไหน ('subscription' | 'credit')
@@ -1018,7 +1021,7 @@ async function handleEvent(event) {
   // ---- จัดการ event postback (ให้คะแนน) ----
   if (event.type === 'postback') {
     const data = event.postback.data;
-    if (data.startsWith('action=rate')) {
+    if (data.startsWith('action=rate&')) {
       const params = new URLSearchParams(data);
       const recordId = params.get('id');
       const score = params.get('score');
@@ -1027,6 +1030,52 @@ async function handleEvent(event) {
         return client.replyMessage({
           replyToken: event.replyToken,
           messages: [{ type: 'text', text: `💖 ขอบคุณสำหรับคะแนน ${score} ดาวนะคะ ดีจังจะนำไปพัฒนาให้แม่นยำขึ้นค่ะ!` }]
+        });
+      }
+    }
+    const isReaderRatingAction = data.startsWith('action=rate_reader');
+    const pendingBookingCompletions = app.get('pendingBookingCompletions');
+    const hasPendingCompletion = pendingBookingCompletions && pendingBookingCompletions.has(userId);
+
+    // รองรับทั้งแบบเต็ม (action=rate_reader) หรือแบบสั้น (score=5) ที่เกิดจาก Admin แก้ไข Flex ผิดพลาด
+    if (isReaderRatingAction || (!data.includes('action=') && score && hasPendingCompletion)) {
+      let readerId = params.get('readerId');
+      
+      // ถ้าไม่มี readerId ใน payload แต่มีคิวรอปิดจบอยู่ ให้ดึง reader_id จากคิว
+      if (!readerId && hasPendingCompletion) {
+        const pendingItems = pendingBookingCompletions.get(userId);
+        if (pendingItems) {
+          for (const item of pendingItems) {
+            if (item.reader_id) { readerId = item.reader_id; break; }
+          }
+        }
+      }
+
+      if (score) {
+        if (readerId) {
+          await addReaderRating(readerId, userId, parseInt(score, 10));
+        }
+        
+        let messages = [
+          { type: 'text', text: `💖 ขอบคุณสำหรับการประเมิน ${score} ดาวนะคะ ดีจังจะนำไปเป็นกำลังใจและปรับปรุงบริการให้ดียิ่งขึ้นค่ะ!` }
+        ];
+
+        if (hasPendingCompletion) {
+          const bookingsOrText = pendingBookingCompletions.get(userId);
+          pendingBookingCompletions.delete(userId);
+          
+          if (bookingsOrText[0] && bookingsOrText[0].type === 'text') {
+             messages.push(bookingsOrText[0]);
+          } else {
+             for (const b of bookingsOrText) {
+                messages.push({ type: 'flex', altText: 'ขอบคุณที่ใช้บริการดูดวง', contents: await buildBookingFlexMessage(b, 'เสร็จสิ้นการดูดวง') });
+             }
+          }
+        }
+
+        return client.replyMessage({
+          replyToken: event.replyToken,
+          messages: messages
         });
       }
     }

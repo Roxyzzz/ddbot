@@ -445,6 +445,89 @@ async function buildRatingFlexMessage(recordId) {
   };
 }
 
+async function buildReaderRatingFlexMessage(readerId, readerName) {
+  if (!global.__DD_BYPASS_FLEX_OVERRIDE) {
+    const overrideTpl = await getSetting('flex_reader_rating');
+    if (overrideTpl) {
+      try {
+        const parsed = overrideTpl
+          .replace(/{{readerId}}/g, readerId || '')
+          .replace(/{{readerName}}/g, readerName || 'หมอดู');
+        return JSON.parse(parsed);
+      } catch (err) {
+        console.error('Failed to parse flex_reader_rating override:', err);
+      }
+    }
+  }
+
+  return {
+    type: 'bubble',
+    size: 'kilo',
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      paddingAll: '15px',
+      contents: [
+        {
+          type: 'text',
+          text: `ประเมินความพึงพอใจ 🔮`,
+          weight: 'bold',
+          size: 'md',
+          color: '#111111',
+          wrap: true,
+          align: 'center'
+        },
+        {
+          type: 'text',
+          text: `สำหรับการพูดคุยกับหมอดู ${readerName} เพื่อเป็นกำลังใจให้แม่หมอค่ะ 💖`,
+          size: 'xs',
+          color: '#aaaaaa',
+          wrap: true,
+          align: 'center',
+          margin: 'sm'
+        },
+        {
+          type: 'box',
+          layout: 'horizontal',
+          margin: 'md',
+          spacing: 'sm',
+          justifyContent: 'center',
+          contents: [1, 2, 3, 4, 5].map(score => ({
+            type: 'box',
+            layout: 'vertical',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#f5f5f5',
+            cornerRadius: 'md',
+            paddingAll: '8px',
+            action: {
+              type: 'postback',
+              data: `action=rate_reader&readerId=${readerId}&score=${score}`,
+              displayText: `ให้คะแนนหมอดู ${score} ดาว`
+            },
+            contents: [
+              {
+                type: 'text',
+                text: '⭐',
+                size: 'md',
+                align: 'center'
+              },
+              {
+                type: 'text',
+                text: `${score}`,
+                size: 'xxs',
+                color: '#888888',
+                align: 'center',
+                margin: 'sm'
+              }
+            ]
+          }))
+        }
+      ]
+    }
+  };
+}
+
 /**
  * buildProfileFlexMessage — Flex Message แสดงข้อมูลสมาชิก
  */
@@ -612,6 +695,8 @@ async function getDefaultFlexTemplate(type) {
       result = JSON.stringify(await buildPaymentSuccessFlex('{{type}}', '{{amountPaid}}', '{{creditAdded}}', '{{expiryDate}}'), null, 2);
     } else if (type === 'flex_rating') {
       result = JSON.stringify(await buildRatingFlexMessage('{{recordId}}'), null, 2);
+    } else if (type === 'flex_reader_rating') {
+      result = JSON.stringify(await buildReaderRatingFlexMessage('{{readerId}}', '{{readerName}}'), null, 2);
     } else if (type === 'flex_profile') {
       result = JSON.stringify(await buildProfileFlexMessage({
         displayName: '{{displayName}}', pictureUrl: '{{pictureUrl}}', credit: '{{credit}}', isVIP: false,
@@ -740,6 +825,7 @@ module.exports = {
   buildPaymentMenuFlex,
   buildPaymentSuccessFlex,
   buildRatingFlexMessage,
+  buildReaderRatingFlexMessage,
   buildProfileFlexMessage,
   getDefaultFlexTemplate
 };
