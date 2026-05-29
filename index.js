@@ -5,7 +5,7 @@ const fs = require('fs');
 const line = require('@line/bot-sdk');
 const axios = require('axios');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { getCredit, addCredit, useCredit, getReferralCode, applyReferralCode, hasActiveSubscription, activateSubscription, revokeSubscription, getAllVIPs, getSubscriptionInfo, canUseSubscriptionDaily, recordSubscriptionRead, getUserProfile, saveReading, hasDailyReadingToday, getReadingStats, getGlobalStats, saveUserDOB, getUserDOB, addPendingSlip, addPendingAngPao, addStripeRecord, saveChatLog, updateLastFaceReadingLog, updateLastPalmReadingLog, createBooking, getUserBookings, ensureUserExists, updateLineProfile, isStripeEnabled, saveAITrainingData, updateAIRating, addReaderRating } = require('./database');
+const { getCredit, addCredit, useCredit, getReferralCode, applyReferralCode, hasActiveSubscription, activateSubscription, revokeSubscription, getAllVIPs, getSubscriptionInfo, canUseSubscriptionDaily, recordSubscriptionRead, getUserProfile, saveReading, hasDailyReadingToday, getReadingStats, getGlobalStats, saveUserDOB, getUserDOB, addPendingSlip, addPendingAngPao, addStripeRecord, saveChatLog, updateLastFaceReadingLog, updateLastPalmReadingLog, createBooking, getUserBookings, ensureUserExists, updateLineProfile, isStripeEnabled, saveAITrainingData, updateAIRating, addReaderRating, getRecentPredictions, getUserReadingPreference } = require('./database');
 const { buildBookingFlexMessage, buildPaymentMenuFlex, buildPaymentSuccessFlex, buildRatingFlexMessage, buildProfileFlexMessage } = require('./flexMessages');
 
 const { generatePromptPayQR } = require('./promptpay');
@@ -187,6 +187,85 @@ function getZodiacFromDOB(dobText) {
   return null;
 }
 
+// =========================================================
+// ข้อมูลโหราศาสตร์เชิงลึก
+// =========================================================
+const ZODIAC_ELEMENTS = {
+  'ราศีเมษ': { element: 'ไฟ 🔥', planet: 'ดาวอังคาร (Mars)', quality: 'Cardinal — ผู้นำ ริเริ่ม' },
+  'ราศีพฤษภ': { element: 'ดิน 🌍', planet: 'ดาวศุกร์ (Venus)', quality: 'Fixed — มั่นคง อดทน' },
+  'ราศีเมถุน': { element: 'ลม 💨', planet: 'ดาวพุธ (Mercury)', quality: 'Mutable — ยืดหยุ่น ปรับตัว' },
+  'ราศีกรกฎ': { element: 'น้ำ 💧', planet: 'ดวงจันทร์ (Moon)', quality: 'Cardinal — ผู้นำ ริเริ่ม' },
+  'ราศีสิงห์': { element: 'ไฟ 🔥', planet: 'ดวงอาทิตย์ (Sun)', quality: 'Fixed — มั่นคง อดทน' },
+  'ราศีกันย์': { element: 'ดิน 🌍', planet: 'ดาวพุธ (Mercury)', quality: 'Mutable — ยืดหยุ่น ปรับตัว' },
+  'ราศีตุลย์': { element: 'ลม 💨', planet: 'ดาวศุกร์ (Venus)', quality: 'Cardinal — ผู้นำ ริเริ่ม' },
+  'ราศีพิจิก': { element: 'น้ำ 💧', planet: 'ดาวพลูโต (Pluto)', quality: 'Fixed — มั่นคง อดทน' },
+  'ราศีธนู': { element: 'ไฟ 🔥', planet: 'ดาวพฤหัสบดี (Jupiter)', quality: 'Mutable — ยืดหยุ่น ปรับตัว' },
+  'ราศีมกร': { element: 'ดิน 🌍', planet: 'ดาวเสาร์ (Saturn)', quality: 'Cardinal — ผู้นำ ริเริ่ม' },
+  'ราศีกุมภ์': { element: 'ลม 💨', planet: 'ดาวยูเรนัส (Uranus)', quality: 'Fixed — มั่นคง อดทน' },
+  'ราศีมีน': { element: 'น้ำ 💧', planet: 'ดาวเนปจูน (Neptune)', quality: 'Mutable — ยืดหยุ่น ปรับตัว' },
+};
+
+function getMoonPhase() {
+  const now = new Date();
+  // คำนวณข้างขึ้นข้างแรมอย่างง่าย (Synodic period ≈ 29.53 วัน)
+  const knownNewMoon = new Date('2024-01-11T11:57:00Z');
+  const daysSince = (now - knownNewMoon) / (1000 * 60 * 60 * 24);
+  const moonAge = ((daysSince % 29.53) + 29.53) % 29.53;
+  if (moonAge < 1.85) return '🌑 จันทร์ดับ (New Moon) — ช่วงเริ่มต้นใหม่ เหมาะตั้งจิตอธิษฐาน';
+  if (moonAge < 7.38) return '🌒 ข้างขึ้น (Waxing Crescent) — พลังกำลังสะสม เหมาะวางแผน';
+  if (moonAge < 9.23) return '🌓 ข้างขึ้นครึ่งดวง (First Quarter) — ถึงเวลาลงมือทำ';
+  if (moonAge < 14.77) return '🌔 ข้างขึ้นเกือบเต็มดวง (Waxing Gibbous) — พลังงานสูง ใกล้สำเร็จ';
+  if (moonAge < 16.61) return '🌕 จันทร์เต็มดวง (Full Moon) — พลังสูงสุด เผยความจริง ผลลัพธ์ปรากฏ';
+  if (moonAge < 22.15) return '🌖 ข้างแรม (Waning Gibbous) — เวลาทบทวน ขอบคุณ ปล่อยวาง';
+  if (moonAge < 24.0) return '🌗 ข้างแรมครึ่งดวง (Last Quarter) — ปล่อยวางสิ่งไม่จำเป็น';
+  return '🌘 ข้างแรมเกือบดับ (Waning Crescent) — พักผ่อน เตรียมตัวสำหรับวงจรใหม่';
+}
+
+function getZodiacDetail(zodiacName) {
+  // ตัดคำใน () ออก เพื่อ match กับ key
+  const shortName = zodiacName ? zodiacName.split(' (')[0] : '';
+  return ZODIAC_ELEMENTS[shortName] || null;
+}
+
+async function buildEnhancedContext(userId, dob, baseTopic) {
+  let extra = '';
+  try {
+    // 1. ประวัติการทำนายเก่า
+    const pastReadings = await getRecentPredictions(userId, 3);
+    if (pastReadings.length > 0) {
+      const historyLines = pastReadings.map(r => {
+        const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('th-TH') : '';
+        const summary = (r.response || '').substring(0, 120).replace(/\n/g, ' ');
+        return `  - [${dateStr}] ${r.topic} | ไพ่: ${r.cards} → ${summary}...`;
+      }).join('\n');
+      extra += `\n\n📜 ประวัติการทำนายก่อนหน้าของผู้ใช้คนนี้:\n${historyLines}\n⚠️ จงทำนายให้สอดคล้องกับคำทำนายก่อนหน้า อย่าขัดแย้ง และให้ข้อมูลใหม่ที่เจาะลึกขึ้น ไม่ซ้ำเดิม`;
+    }
+
+    // 2. ข้อมูลโหราศาสตร์เชิงลึก
+    const cached = await getUserDOB(userId);
+    const zodiacName = cached?.zodiac || '';
+    const detail = getZodiacDetail(zodiacName);
+    if (detail) {
+      extra += `\n\n🔮 ข้อมูลราศีเชิงลึก:\n  ราศี: ${zodiacName}\n  ธาตุ: ${detail.element}\n  ดาวประจำราศี: ${detail.planet}\n  คุณสมบัติ: ${detail.quality}`;
+    }
+    extra += `\n  ดวงจันทร์วันนี้: ${getMoonPhase()}`;
+
+    // 3. Preference จาก rating
+    const pref = await getUserReadingPreference(userId);
+    if (pref && pref.total >= 3) {
+      if (pref.avg_rating && pref.avg_rating < 3) {
+        extra += `\n\n💡 ผู้ใช้เคยให้คะแนนคำทำนายต่ำ (เฉลี่ย ${Number(pref.avg_rating).toFixed(1)}/5) จงตอบให้ละเอียด จริงจัง เจาะจง มีช่วงเวลาชัดเจน และให้คำแนะนำที่ทำได้จริง`;
+      }
+      if (pref.liked_topics) {
+        extra += `\n  หัวข้อที่ผู้ใช้ชอบ: ${pref.liked_topics}`;
+      }
+    }
+  } catch (e) {
+    console.error('buildEnhancedContext error:', e.message);
+  }
+  return extra;
+}
+
 // ฟังก์ชันแสดงอนิเมชั่น "กำลังพิมพ์..." ของ LINE
 async function showLoadingAnimation(userId, seconds = 10) {
   try {
@@ -221,7 +300,12 @@ async function callGeminiAI(userId, userMessage, context = '', imagePath = '') {
 จงรับฟังปัญหาและตอบคำถามของผู้ใช้ หากคำถามเป็นแนวปรึกษา ให้วิเคราะห์โดยอิงจากโหราศาสตร์ หรืออุปโลกน์สุ่มหน้าไพ่ทาโรต์ 1 ใบที่ตรงกับสถานการณ์เพื่อช่วยตอบคำถาม
 หากผู้ใช้บอกว่าอยาก "ดูดวงวันเกิด" หรือถามเกี่ยวกับวันเกิด ให้สอบถาม วัน/เดือน/ปีเกิด ของเขาก่อนเสมอ อย่าเพิ่งทำนายจนกว่าจะได้รับข้อมูลวันเกิด
 ให้ตอบด้วยสำเนียงผู้หญิงไทยที่อ่อนหวาน ใช้คำลงท้ายว่า "ค่ะ" หรือ "นะคะ" เสมอ ตอบสั้นๆ กระชับ ไม่เกิน 3-4 บรรทัด อ่านง่าย เป็นกันเอง
-กฎสำคัญ: ห้ามคำนวณราศีเองจากความจำเด็ดขาด — หากมีข้อมูล [ราศีเกิด: ...] ใน context ให้ใช้ค่านั้นเท่านั้น`;
+กฎสำคัญ: ห้ามคำนวณราศีเองจากความจำเด็ดขาด — หากมีข้อมูล [ราศีเกิด: ...] ใน context ให้ใช้ค่านั้นเท่านั้น
+กฎเพิ่มเติมสำหรับคำทำนาย:
+- หากมี "ประวัติการทำนายก่อนหน้า" ให้อ้างอิงถึงสิ่งที่เคยทำนายไว้ เพื่อความต่อเนื่อง
+- ระบุช่วงเวลาให้ชัดเจน เช่น "ภายใน 2 สัปดาห์นี้" หรือ "ช่วงกลางเดือนหน้า" แทนคำว่า "เร็วๆ นี้"
+- ให้คำแนะนำที่ทำได้จริง เช่น "ลองสวมเสื้อสีเขียวในวันพุธ" แทน "ทำดีได้ดี"
+- ผสมผสานข้อมูลธาตุประจำราศี ดาวประจำราศี และดวงจันทร์ เข้ากับการวิเคราะห์`;
 
     if (imagePath && fs.existsSync(imagePath)) {
       const visionModel = genAI.getGenerativeModel({
@@ -672,10 +756,11 @@ function isAngPaoLink(text) {
 async function executeTopicReading(userId, dob, topic, replyToken) {
   const today = new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const picked = TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)];
+  const enhancedContext = await buildEnhancedContext(userId, dob, topic);
   const topicContext = `ผู้ใช้เกิดวันที่: ${dob}
 วันนี้คือ ${today} ไพ่ที่สุ่มได้คือ "${picked.card}" (ความหมาย: ${picked.meaning}, คำแนะนำ: ${picked.advice})
 จงวิเคราะห์ดวงเรื่อง"${topic}" ให้ลูกค้าโดยเฉพาะ โดยอิงจากวันเกิด ราศีเกิด และพลังไพ่
-อธิบายละเอียด อบอุ่น เป็นกันเอง ให้กำลังใจ ความยาว 5-8 ประโยค`;
+อธิบายละเอียด อบอุ่น เป็นกันเอง ให้กำลังใจ ความยาว 5-8 ประโยค${enhancedContext}`;
 
   try {
     const aiResponse = await callGeminiAI(userId, `ดูดวงเรื่อง${topic}`, topicContext);
@@ -716,7 +801,8 @@ async function executeDetailedReading(userId, dob, paymentType, replyToken) {
     }
 
     const picked = TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)];
-    const context = `ผู้ใช้เกิดวันที่: ${dob}\nผู้ใช้เป็นสมาชิก Premium ดูดวงแบบละเอียด ไพ่ที่สุ่มได้คือ "${picked.card}" (ความหมาย: ${picked.meaning}, คำแนะนำ: ${picked.advice}) จงวิเคราะห์ดวงอย่างละเอียดลึกซึ้ง ครอบคลุมทุกด้าน ความรัก การงาน การเงิน สุขภาพ และช่วงเวลาที่ควรระวัง พร้อมคำนวณหาราศีเกิด สีนำโชค และเลขนำโชคให้ด้วย ตอบประมาณ 8-10 บรรทัด`;
+    const enhancedContext = await buildEnhancedContext(userId, dob, 'ดูดวงละเอียด');
+    const context = `ผู้ใช้เกิดวันที่: ${dob}\nผู้ใช้เป็นสมาชิก Premium ดูดวงแบบละเอียด ไพ่ที่สุ่มได้คือ "${picked.card}" (ความหมาย: ${picked.meaning}, คำแนะนำ: ${picked.advice}) จงวิเคราะห์ดวงอย่างละเอียดลึกซึ้ง ครอบคลุมทุกด้าน ความรัก การงาน การเงิน สุขภาพ และช่วงเวลาที่ควรระวัง พร้อมคำนวณหาราศีเกิด สีนำโชค และเลขนำโชคให้ด้วย ตอบประมาณ 8-10 บรรทัด${enhancedContext}`;
     
     try {
       const aiResponse = await callGeminiAI(userId, "ตรวจดวงชะตาแบบละเอียด", context);
@@ -747,7 +833,8 @@ async function executeDetailedReading(userId, dob, paymentType, replyToken) {
     }
     
     const picked = TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)];
-    const context = `ผู้ใช้เกิดวันที่: ${dob}\nผู้ใช้เป็นสมาชิก Premium ดูดวงแบบละเอียด ไพ่ที่สุ่มได้คือ "${picked.card}" (ความหมาย: ${picked.meaning}, คำแนะนำ: ${picked.advice}) จงวิเคราะห์ดวงอย่างละเอียดลึกซึ้ง ครอบคลุมทุกด้าน ความรัก การงาน การเงิน สุขภาพ และช่วงเวลาที่ควรระวัง พร้อมคำนวณหาราศีเกิด (ให้ใช้เกณฑ์แบบสากล Western Astrology เท่านั้น เช่น 20 เม.ย.-20 พ.ค. คือราศีพฤษภ) สีนำโชค และเลขนำโชคให้ด้วย ตอบประมาณ 8-10 บรรทัด`;
+    const enhancedContext = await buildEnhancedContext(userId, dob, 'ดูดวงละเอียด');
+    const context = `ผู้ใช้เกิดวันที่: ${dob}\nผู้ใช้เป็นสมาชิก Premium ดูดวงแบบละเอียด ไพ่ที่สุ่มได้คือ "${picked.card}" (ความหมาย: ${picked.meaning}, คำแนะนำ: ${picked.advice}) จงวิเคราะห์ดวงอย่างละเอียดลึกซึ้ง ครอบคลุมทุกด้าน ความรัก การงาน การเงิน สุขภาพ และช่วงเวลาที่ควรระวัง พร้อมคำนวณหาราศีเกิด (ให้ใช้เกณฑ์แบบสากล Western Astrology เท่านั้น เช่น 20 เม.ย.-20 พ.ค. คือราศีพฤษภ) สีนำโชค และเลขนำโชคให้ด้วย ตอบประมาณ 8-10 บรรทัด${enhancedContext}`;
     
     try {
       const aiResponse = await callGeminiAI(userId, "ตรวจดวงชะตาแบบละเอียด", context);
@@ -1329,7 +1416,8 @@ async function handleEvent(event) {
         day: 'numeric',
       });
       const picked = TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)];
-      const context = `ผู้ใช้ต้องการดูดวงรายวันวันนี้ (${today}) ให้ท่านโหรสุ่มได้ไพ่ "${picked.card}" (ความหมาย: ${picked.meaning}, คำแนะนำ: ${picked.advice}) ทายดวงชะตาสั้นๆ ครอบคลุม ความรัก การงาน การเงิน สุขภาพ ให้เข้ากับพลังงานของวันนี้แบบเป็นกันเอง`;
+      const enhancedContext = await buildEnhancedContext(userId, null, 'ดูดวงรายวัน');
+      const context = `ผู้ใช้ต้องการดูดวงรายวันวันนี้ (${today}) ให้ท่านโหรสุ่มได้ไพ่ "${picked.card}" (ความหมาย: ${picked.meaning}, คำแนะนำ: ${picked.advice}) ทายดวงชะตาสั้นๆ ครอบคลุม ความรัก การงาน การเงิน สุขภาพ ให้เข้ากับพลังงานของวันนี้แบบเป็นกันเอง${enhancedContext}`;
       const aiResponse = await callGeminiAI(userId, userMessage, context);
       await saveReading(userId, 'ดูดวงรายวัน');
       const recordId = await saveAITrainingData(userId, 'ดูดวงรายวัน', await getUserDOB(userId)?.dob || null, picked.card, userMessage, aiResponse);
@@ -2007,7 +2095,8 @@ async function handleEvent(event) {
 
         // เตรียมข้อมูลก่อนเรียก AI
         const picked = TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)];
-        const context = `ผู้ใช้เกิดวันที่: ${dob}\nผู้ใช้เป็นสมาชิก Premium ดูดวงแบบละเอียด ไพ่ที่สุ่มได้คือ "${picked.card}" (ความหมาย: ${picked.meaning}, คำแนะนำ: ${picked.advice}) จงวิเคราะห์ดวงอย่างละเอียดลึกซึ้ง ครอบคลุมทุกด้าน ความรัก การงาน การเงิน สุขภาพ และช่วงเวลาที่ควรระวัง พร้อมคำนวณหาราศีเกิด สีนำโชค และเลขนำโชคให้ด้วย ตอบประมาณ 8-10 บรรทัด`;
+        const enhancedContext = await buildEnhancedContext(userId, dob, 'ดูดวงละเอียด');
+        const context = `ผู้ใช้เกิดวันที่: ${dob}\nผู้ใช้เป็นสมาชิก Premium ดูดวงแบบละเอียด ไพ่ที่สุ่มได้คือ "${picked.card}" (ความหมาย: ${picked.meaning}, คำแนะนำ: ${picked.advice}) จงวิเคราะห์ดวงอย่างละเอียดลึกซึ้ง ครอบคลุมทุกด้าน ความรัก การงาน การเงิน สุขภาพ และช่วงเวลาที่ควรระวัง พร้อมคำนวณหาราศีเกิด สีนำโชค และเลขนำโชคให้ด้วย ตอบประมาณ 8-10 บรรทัด${enhancedContext}`;
         
         try {
           // 1. เรียกใช้งาน AI ก่อนเลย ยังไม่ตัดโควตา
@@ -2043,7 +2132,8 @@ async function handleEvent(event) {
         
         // เตรียมข้อมูลก่อนเรียก AI
         const picked = TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)];
-        const context = `ผู้ใช้เกิดวันที่: ${dob}\nผู้ใช้เป็นสมาชิก Premium ดูดวงแบบละเอียด ไพ่ที่สุ่มได้คือ "${picked.card}" (ความหมาย: ${picked.meaning}, คำแนะนำ: ${picked.advice}) จงวิเคราะห์ดวงอย่างละเอียดลึกซึ้ง ครอบคลุมทุกด้าน ความรัก การงาน การเงิน สุขภาพ และช่วงเวลาที่ควรระวัง พร้อมคำนวณหาราศีเกิด (ให้ใช้เกณฑ์แบบสากล Western Astrology เท่านั้น เช่น 20 เม.ย.-20 พ.ค. คือราศีพฤษภ) สีนำโชค และเลขนำโชคให้ด้วย ตอบประมาณ 8-10 บรรทัด`;
+        const enhancedContext = await buildEnhancedContext(userId, dob, 'ดูดวงละเอียด');
+        const context = `ผู้ใช้เกิดวันที่: ${dob}\nผู้ใช้เป็นสมาชิก Premium ดูดวงแบบละเอียด ไพ่ที่สุ่มได้คือ "${picked.card}" (ความหมาย: ${picked.meaning}, คำแนะนำ: ${picked.advice}) จงวิเคราะห์ดวงอย่างละเอียดลึกซึ้ง ครอบคลุมทุกด้าน ความรัก การงาน การเงิน สุขภาพ และช่วงเวลาที่ควรระวัง พร้อมคำนวณหาราศีเกิด (ให้ใช้เกณฑ์แบบสากล Western Astrology เท่านั้น เช่น 20 เม.ย.-20 พ.ค. คือราศีพฤษภ) สีนำโชค และเลขนำโชคให้ด้วย ตอบประมาณ 8-10 บรรทัด${enhancedContext}`;
         
         try {
           // 1. เรียกใช้งาน AI ก่อนเลย ยังไม่หักเงิน

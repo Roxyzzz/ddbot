@@ -504,6 +504,24 @@ async function getAITrainingData(limit = 100) {
   return rows;
 }
 
+// AI Context Helpers
+async function getRecentPredictions(userId, limit = 3) {
+  const [rows] = await pool.execute(
+    `SELECT topic, cards, response, created_at FROM ai_training_data WHERE user_id = ? ORDER BY created_at DESC LIMIT ?`,
+    [userId, limit]
+  );
+  return rows;
+}
+async function getUserReadingPreference(userId) {
+  const [rows] = await pool.execute(
+    `SELECT AVG(rating) as avg_rating, COUNT(*) as total,
+      GROUP_CONCAT(CASE WHEN rating >= 4 THEN topic END SEPARATOR ', ') as liked_topics,
+      GROUP_CONCAT(CASE WHEN rating <= 2 THEN topic END SEPARATOR ', ') as disliked_topics
+     FROM ai_training_data WHERE user_id = ? AND rating > 0`, [userId]
+  );
+  return rows[0] || { avg_rating: 0, total: 0, liked_topics: null, disliked_topics: null };
+}
+
 // Cron helpers
 async function getExpiringVIPs(days) {
   const [rows] = await pool.execute(`SELECT user_id, line_name, subscription_expires_at FROM users
@@ -567,7 +585,7 @@ module.exports = {
   createReader, getReaders, verifyReader, assignReaderToUser, getUsersByReader,
   ensureUserExists, updateLineProfile, getRevenueStats,
   getSetting, setSetting, isStripeEnabled, getAllSettings,
-  saveAITrainingData, updateAIRating, getAITrainingData, addReaderRating,
+  saveAITrainingData, updateAIRating, getAITrainingData, getRecentPredictions, getUserReadingPreference, addReaderRating,
   getExpiringVIPs, getOldPendingSlips, deletePendingSlips,
   getUserMemo, updateUserMemo, completeUserBookings,
   getReaderHistory, getBookingSystemCustomers,
