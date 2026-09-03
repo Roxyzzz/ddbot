@@ -16,43 +16,71 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Prompt', 'Inter', sans-serif; }
     body { background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
+    /* ── Animations ──────────────────────────────── */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,.5); } 70% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+    @keyframes sendPulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+    @keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+    @keyframes bounceIn { 0% { transform: scale(0); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
     /* Sidebar (Users List) */
-    .sidebar { width: 320px; background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+    .sidebar { width: 320px; background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; animation: slideInLeft .4s ease-out; }
     .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
     .sidebar-header h2 { font-size: 1.2rem; color: #fff; font-weight: 500; display: flex; align-items: center; gap: 8px; }
     .user-list { flex: 1; overflow-y: auto; padding: 10px; }
-    .user-item { padding: 12px 15px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: 0.2s; position: relative; }
-    .user-item:hover { background: var(--bg-hover); }
-    .user-item.active { background: var(--primary); }
+    .user-item { padding: 12px 15px; border-radius: 10px; margin-bottom: 5px; cursor: pointer; transition: all 0.25s cubic-bezier(.4,0,.2,1); position: relative; animation: fadeInUp .4s ease-out backwards; border: 1px solid transparent; }
+    .user-item:hover { background: var(--bg-hover); transform: translateX(4px); border-color: rgba(139,92,246,.15); }
+    .user-item.active { background: var(--primary); border-color: var(--primary); transform: scale(1.02); box-shadow: 0 4px 20px rgba(139,92,246,.3); }
     .user-item.active .text-dim { color: #ddd; }
     .user-id { font-size: 0.9rem; font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
     .user-preview { font-size: 0.8rem; color: var(--text-dim); margin-top: 4px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-    .live-badge { position: absolute; top: 12px; right: 15px; background: #ef4444; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 99px; display: none; }
+    .live-badge { position: absolute; top: 12px; right: 15px; background: #ef4444; color: white; font-size: 0.65rem; padding: 2px 8px; border-radius: 99px; display: none; animation: pulseRing 2s ease-in-out infinite; font-weight: 600; letter-spacing: .5px; }
     .user-item.is-live .live-badge { display: block; }
     .user-item.active .live-badge { background: #fff; color: #ef4444; }
+    .unread-badge { position: absolute; bottom: 12px; right: 15px; background: #3b82f6; color: white; font-size: 0.65rem; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; display: flex; align-items: center; justify-content: center; font-weight: 700; animation: bounceIn .3s ease-out; }
+    .user-item.active .unread-badge { display: none; }
+
+    /* Connection Status */
+    .conn-indicator { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; padding: 8px 20px; border-bottom: 1px solid var(--border); }
+    .conn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; transition: background .3s; }
+    .conn-dot.online { background: #10b981; animation: pulseDot 2s ease-in-out infinite; }
+    .conn-dot.offline { background: #ef4444; }
+    .conn-text { color: var(--text-dim); }
 
     /* Main Chat Area */
     .main { flex: 1; display: flex; flex-direction: column; background: var(--bg); position: relative; min-width: 0; min-height: 0; }
     #chat-interface { min-height: 0; }
-    .chat-header { padding: 15px 24px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .chat-header { padding: 15px 24px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; animation: fadeIn .3s ease-out; }
     .chat-title { font-size: 1.1rem; font-weight: 500; }
     
     /* Tools Sidebar (Right) */
-    .tools-sidebar { width: 300px; border-left: 1px solid var(--border); background: var(--bg-card); display: none; flex-direction: column; overflow-y: auto; }
-    .tool-section { padding: 20px; border-bottom: 1px solid var(--border); }
+    .tools-sidebar { width: 300px; border-left: 1px solid var(--border); background: var(--bg-card); display: none; flex-direction: column; overflow-y: auto; animation: slideInRight .4s ease-out; }
+    .tool-section { padding: 20px; border-bottom: 1px solid var(--border); animation: fadeInUp .4s ease-out backwards; }
+    .tool-section:nth-child(1) { animation-delay: .05s; }
+    .tool-section:nth-child(2) { animation-delay: .1s; }
+    .tool-section:nth-child(3) { animation-delay: .15s; }
+    .tool-section:nth-child(4) { animation-delay: .2s; }
     .tool-section h3 { margin-top: 0; font-size: 0.95rem; color: var(--text-dim); margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .timer-display { font-size: 2.5rem; font-family: monospace; font-weight: bold; text-align: center; color: var(--text); padding: 10px; background: #0d0d14; border-radius: 8px; margin-bottom: 12px; }
+    .timer-display { font-size: 2.5rem; font-family: monospace; font-weight: bold; text-align: center; color: var(--text); padding: 10px; background: #0d0d14; border-radius: 8px; margin-bottom: 12px; transition: color .3s; }
     .timer-display.warning { color: #f59e0b; }
     .timer-display.danger { color: #ef4444; }
-    .btn-timer { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+    .btn-timer { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.25s; }
+    .btn-timer:active { transform: scale(0.95); }
     .btn-timer.start { background: #10b981; color: white; }
     .btn-timer.reset { background: #4b5563; color: white; }
     
-    .memo-input { width: 100%; height: 180px; background: #0d0d14; border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: white; resize: none; font-size: 0.9rem; margin-bottom: 10px; }
-    .memo-input:focus { border-color: var(--blue); outline: none; }
-    .btn-save { width: 100%; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
-    .btn-end { width: 100%; padding: 14px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
-    .btn-end:hover { background: #dc2626; }
+    .memo-input { width: 100%; height: 180px; background: #0d0d14; border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: white; resize: none; font-size: 0.9rem; margin-bottom: 10px; transition: border-color .2s; }
+    .memo-input:focus { border-color: var(--primary); outline: none; }
+    .btn-save { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all .25s; }
+    .btn-save:active { transform: scale(0.97); }
+    .btn-end { width: 100%; padding: 14px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.25s; }
+    .btn-end:hover { background: #dc2626; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,.3); }
+    .btn-end:active { transform: scale(0.97); }
     
     /* Toggle Switch */
     .live-toggle-container { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
@@ -62,11 +90,11 @@
     .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
     input:checked + .slider { background-color: #ef4444; }
     input:checked + .slider:before { transform: translateX(20px); }
-    .status-text { color: var(--text-dim); font-size: 0.85rem; }
+    .status-text { color: var(--text-dim); font-size: 0.85rem; transition: color .3s; }
     .status-text.active { color: #ef4444; font-weight: 500; }
 
     /* Chat Messages */
-    .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
     .msg-wrap { display: flex; flex-direction: column; max-width: 70%; }
     .msg-wrap.left { align-self: flex-start; }
     .msg-wrap.right { align-self: flex-end; }
@@ -74,34 +102,59 @@
     .msg-sender { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px; margin-left: 4px; }
     .msg-wrap.right .msg-sender { align-self: flex-end; margin-right: 4px; }
     
-    .msg-bubble { padding: 12px 16px; border-radius: 16px; font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+    .msg-bubble { padding: 12px 16px; border-radius: 16px; font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; transition: transform .15s; }
+    .msg-bubble:hover { transform: scale(1.01); }
     .msg-wrap.left .msg-bubble { background: var(--bot-msg); border-bottom-left-radius: 4px; }
     .msg-wrap.right .msg-bubble { background: var(--user-msg); border-bottom-right-radius: 4px; }
     .msg-wrap.right.reader .msg-bubble { background: var(--reader-msg); } /* สีพิเศษตอนหมอดูตอบ */
     
     .msg-time { font-size: 0.65rem; color: var(--text-dim); margin-top: 4px; align-self: flex-end; }
     
-    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); gap: 16px; }
+    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); gap: 16px; animation: fadeIn .5s ease-out; }
 
     /* Chat Input */
-    .chat-input-area { padding: 20px; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; gap: 12px; }
-    .chat-input { flex: 1; background: #0d0d14; border: 1px solid var(--border); padding: 12px 16px; border-radius: 8px; color: white; font-size: 0.95rem; outline: none; transition: 0.2s; resize: none; min-height: 48px; max-height: 120px; }
-    .chat-input:focus { border-color: var(--primary); }
+    .chat-input-area { padding: 16px 20px; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
+    .chat-input { flex: 1; background: #0d0d14; border: 1px solid var(--border); padding: 12px 16px; border-radius: 24px; color: white; font-size: 0.95rem; outline: none; transition: all 0.25s; resize: none; min-height: 48px; max-height: 120px; }
+    .chat-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(139,92,246,.15); }
     .chat-input:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-send { background: var(--primary); color: white; border: none; padding: 0 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: 0.2s; font-weight: 500; }
-    .btn-send:hover:not(:disabled) { background: var(--primary-hover); }
-    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; background: #4b5563; }
+    .btn-send { 
+      background: var(--primary); color: white; border: none; 
+      width: 48px; height: 48px; border-radius: 50%; 
+      font-size: 1.3rem; cursor: pointer; transition: all 0.25s; 
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(139,92,246,.3);
+    }
+    .btn-send:hover:not(:disabled) { background: var(--primary-hover); transform: scale(1.08); box-shadow: 0 4px 16px rgba(139,92,246,.4); }
+    .btn-send:active:not(:disabled) { animation: sendPulse .3s ease-out; }
+    .btn-send:disabled { opacity: 0.4; cursor: not-allowed; background: #4b5563; box-shadow: none; }
+    .btn-img {
+      background: transparent; color: var(--text-dim); border: 1px solid var(--border);
+      width: 42px; height: 42px; border-radius: 50%;
+      font-size: 1.1rem; cursor: pointer; transition: all 0.25s;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .btn-img:hover:not(:disabled) { color: var(--primary); border-color: var(--primary); background: rgba(139,92,246,.08); }
+    .btn-img:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-history { background: rgba(59,130,246,.12); color: #60a5fa; border: 1px solid rgba(59,130,246,.25); padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-family: inherit; font-weight: 500; transition: all .2s; white-space: nowrap; }
+    .btn-history:hover { background: rgba(59,130,246,.2); }
+    .btn-history.active { background: #3b82f6; color: #fff; }
+    .img-upload-preview { position: absolute; bottom: 80px; left: 20px; right: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: none; animation: fadeInUp .2s ease-out; z-index: 10; }
+    .img-upload-preview img { max-height: 200px; max-width: 100%; border-radius: 8px; }
+    .img-upload-preview .close-preview { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.6); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; }
 
     .loader { display: none; width: 20px; height: 20px; border: 2px solid #fff; border-bottom-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
 
     /* Login Screen */
     #login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-    .login-box { background: var(--bg-card); padding: 40px; border-radius: 16px; border: 1px solid var(--border); width: 100%; max-width: 400px; text-align: center; }
+    .login-box { background: var(--bg-card); padding: 40px; border-radius: 16px; border: 1px solid var(--border); width: 100%; max-width: 400px; text-align: center; animation: popIn .4s cubic-bezier(.4,0,.2,1); }
     .login-box h2 { margin-bottom: 24px; }
-    .login-input { width: 100%; padding: 12px; margin-bottom: 16px; background: #0d0d14; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 1rem; }
-    .btn-login { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 500; }
-    .btn-login:hover { background: var(--primary-hover); }
+    .login-input { width: 100%; padding: 12px; margin-bottom: 16px; background: #0d0d14; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 1rem; transition: border-color .2s; outline: none; }
+    .login-input:focus { border-color: var(--primary); }
+    .btn-login { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 500; transition: all .25s; }
+    .btn-login:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(139,92,246,.3); }
+    .btn-login:active { transform: scale(0.97); }
     #app-container { display: none; height: 100vh; width: 100vw; }
   </style>
 </head>
@@ -125,6 +178,10 @@
       <h2 style="margin:0;">🔮 Live Reader Panel</h2>
       <button onclick="logout()" style="background:transparent; border:1px solid #4b5563; color:#9ca3af; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem;">Logout</button>
     </div>
+    <div class="conn-indicator" id="conn-indicator">
+      <span class="conn-dot online" id="conn-dot"></span>
+      <span class="conn-text" id="conn-text">เชื่อมต่อปกติ</span>
+    </div>
     <div class="user-list" id="user-list">
       <!-- Users will be loaded here -->
       <div class="loader" id="users-loader" style="display:block"></div>
@@ -140,7 +197,10 @@
 
     <div id="chat-interface" style="display:none; flex:1; flex-direction:column;">
       <div class="chat-header">
-        <div class="chat-title" id="chat-title">User ID</div>
+        <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+          <div class="chat-title" id="chat-title">User ID</div>
+          <button class="btn-history" id="btn-history" onclick="toggleHistoryView()">📜 ดูประวัติ</button>
+        </div>
         <div class="live-toggle-container">
           <span class="status-text" id="live-status-text">บอท AI ทำงาน</span>
           <label class="switch">
@@ -154,9 +214,18 @@
         <!-- Messages -->
       </div>
       
-      <div class="chat-input-area">
+      <div class="chat-input-area" style="position:relative;">
+        <div class="img-upload-preview" id="img-upload-preview">
+          <button class="close-preview" onclick="cancelImageUpload()">✕</button>
+          <img id="img-preview-el" src="">
+          <div style="margin-top:8px; font-size:0.8rem; color:var(--text-dim)">📷 กดปุ่มส่งเพื่อส่งรูปนี้</div>
+        </div>
+        <input type="file" id="image-file-input" accept="image/*" style="display:none" onchange="onImageSelected(event)">
+        <button class="btn-img" id="btn-img" disabled onclick="document.getElementById('image-file-input').click()" title="ส่งรูปภาพ">📷</button>
         <textarea class="chat-input" id="chat-input" placeholder="พิมพ์ข้อความตอบกลับ... (ต้องเปิดโหมด Live Chat ก่อน)" disabled onkeydown="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
-        <button class="btn-send" id="btn-send" disabled onclick="sendMessage()">ส่ง</button>
+        <button class="btn-send" id="btn-send" disabled onclick="sendMessage()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:-2px; margin-top:2px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
       </div>
     </div>
   </div>
@@ -206,6 +275,12 @@
   let isCurrentLive = false;
   let pollingInterval = null;
   let authToken = localStorage.getItem('readerToken') || '';
+  let isHistoryMode = false;
+  let pendingImageFile = null;
+  let apiFailCount = 0;
+
+  // Unread tracking
+  const lastSeenCounts = JSON.parse(localStorage.getItem('lastSeenCounts') || '{}');
 
   async function login() {
     const user = document.getElementById('login-user').value.trim();
@@ -234,16 +309,47 @@
   }
 
   async function api(method, path, body) {
-    const res = await fetch('/reader' + path, {
-      method,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': authToken
-      },
-      body: body ? JSON.stringify(body) : undefined
-    });
-    if (res.status === 401) { logout(); throw new Error('Session expired'); }
-    return res.json();
+    try {
+      const res = await fetch('/reader' + path, {
+        method,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': authToken,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      if (res.status === 401) { logout(); throw new Error('Session expired'); }
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      // Connection recovered
+      if (apiFailCount > 0) {
+        apiFailCount = 0;
+        updateConnectionStatus(true);
+      }
+      return json;
+    } catch (err) {
+      if (err.message === 'Session expired') throw err;
+      apiFailCount++;
+      if (apiFailCount >= 2) updateConnectionStatus(false);
+      throw err;
+    }
+  }
+
+  function updateConnectionStatus(isOnline) {
+    const dot = document.getElementById('conn-dot');
+    const text = document.getElementById('conn-text');
+    if (isOnline) {
+      dot.className = 'conn-dot online';
+      text.textContent = 'เชื่อมต่อปกติ';
+      text.style.color = '';
+    } else {
+      dot.className = 'conn-dot offline';
+      text.textContent = 'ขาดการเชื่อมต่อ';
+      text.style.color = '#ef4444';
+    }
   }
 
   function fmtTime(dateStr) {
@@ -267,7 +373,7 @@
   // Load User List
   async function loadUsers() {
     try {
-      const users = await api('GET', '/api/users');
+      const users = await api('GET', `/api/users?_=${Date.now()}`);
       const list = document.getElementById('user-list');
       document.getElementById('users-loader').style.display = 'none';
       
@@ -275,6 +381,16 @@
         list.innerHTML = '<div style="text-align:center;color:#6b7280;margin-top:20px;font-size:.85rem">ไม่มีประวัติการคุย</div>';
         return;
       }
+
+      // Initialize lastSeenCounts for new users to avoid false unread badges
+      let needSave = false;
+      users.forEach(u => {
+        if (lastSeenCounts[u.user_id] === undefined) {
+          lastSeenCounts[u.user_id] = u.message_count || 0;
+          needSave = true;
+        }
+      });
+      if (needSave) localStorage.setItem('lastSeenCounts', JSON.stringify(lastSeenCounts));
 
       list.innerHTML = users.map(u => {
         let previewText = u.message || '';
@@ -284,8 +400,13 @@
         const pic = u.line_picture || '';
         const safeName = name.replace(/'/g, "\\'");
         const safePic = pic.replace(/'/g, "\\'");
+        // Unread badge
+        const serverCount = u.message_count || 0;
+        const lastSeen = lastSeenCounts[u.user_id] || 0;
+        const unread = Math.max(0, serverCount - lastSeen);
+        const unreadHtml = unread > 0 ? `<span class="unread-badge">${unread > 99 ? '99+' : unread}</span>` : '';
         return `
-          <div class="user-item ${u.user_id === currentUserId ? 'active' : ''} ${u.isLive ? 'is-live' : ''}" onclick="selectUser('${u.user_id}', '${safeName}', '${safePic}')">
+          <div class="user-item ${u.user_id === currentUserId ? 'active' : ''} ${u.isLive ? 'is-live' : ''}" data-userid="${u.user_id}" onclick="selectUser('${u.user_id}', '${safeName}', '${safePic}', ${serverCount})">
             <div style="display:flex; align-items:center; gap:10px;">
               ${pic ? `<img src="${pic}" style="width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,0.1)">` : `<div style="width:32px; height:32px; border-radius:50%; background:var(--bg-hover); display:flex; align-items:center; justify-content:center; font-size:0.7rem">👤</div>`}
               <div style="flex:1; min-width:0;">
@@ -294,6 +415,7 @@
               </div>
             </div>
             <div class="live-badge">LIVE</div>
+            ${unreadHtml}
           </div>
         `;
       }).join('');
@@ -301,8 +423,18 @@
   }
 
   // Select User & Load Chats
-  async function selectUser(userId, lineName, linePicture) {
+  async function selectUser(userId, lineName, linePicture, messageCount) {
     currentUserId = userId;
+    isHistoryMode = false;
+    document.getElementById('btn-history').classList.remove('active');
+    document.getElementById('btn-history').textContent = '📜 ดูประวัติ';
+    cancelImageUpload();
+
+    // Mark as read
+    if (messageCount !== undefined) {
+      lastSeenCounts[userId] = messageCount;
+      localStorage.setItem('lastSeenCounts', JSON.stringify(lastSeenCounts));
+    }
     document.getElementById('empty-state').style.display = 'none';
     document.getElementById('chat-interface').style.display = 'flex';
     document.getElementById('tools-sidebar').style.display = 'flex'; // Show tools
@@ -339,7 +471,8 @@
   async function refreshChat() {
     if (!currentUserId) return;
     try {
-      const data = await api('GET', `/api/chats/${currentUserId}`);
+      const queryStr = isHistoryMode ? '?full=1' : '';
+      const data = await api('GET', `/api/chats/${currentUserId}${queryStr}`);
       
       // 🔔 Browser Notification: detect new customer messages
       const newCount = data.chats.filter(c => c.message).length;
@@ -419,26 +552,104 @@
     const statusText = document.getElementById('live-status-text');
     const input = document.getElementById('chat-input');
     const btn = document.getElementById('btn-send');
+    const btnImg = document.getElementById('btn-img');
     
     if (isCurrentLive) {
       statusText.textContent = '🔴 Live Chat (คุณตอบเอง)';
       statusText.classList.add('active');
       input.disabled = false;
       btn.disabled = false;
+      btnImg.disabled = false;
       input.placeholder = "พิมพ์ข้อความตอบกลับลูกค้า...";
     } else {
       statusText.textContent = '🤖 บอท AI ทำงาน';
       statusText.classList.remove('active');
       input.disabled = true;
       btn.disabled = true;
+      btnImg.disabled = true;
       input.placeholder = "ต้องเปิดโหมด Live Chat ก่อนถึงจะพิมพ์ตอบได้";
       input.value = '';
+    }
+  }
+
+  // Toggle History View
+  function toggleHistoryView() {
+    isHistoryMode = !isHistoryMode;
+    const btn = document.getElementById('btn-history');
+    if (isHistoryMode) {
+      btn.classList.add('active');
+      btn.textContent = 'กลับสู่ปัจจุบัน';
+    } else {
+      btn.classList.remove('active');
+      btn.textContent = '📜 ดูประวัติ';
+    }
+    refreshChat();
+  }
+
+  // Image Upload Handling
+  function onImageSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    pendingImageFile = file;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('img-preview-el').src = e.target.result;
+      document.getElementById('img-upload-preview').style.display = 'block';
+      document.getElementById('chat-input').disabled = true;
+      document.getElementById('btn-send').disabled = false;
+    }
+    reader.readAsDataURL(file);
+  }
+
+  function cancelImageUpload() {
+    pendingImageFile = null;
+    document.getElementById('image-file-input').value = '';
+    document.getElementById('img-upload-preview').style.display = 'none';
+    if (isCurrentLive) {
+      document.getElementById('chat-input').disabled = false;
+    }
+  }
+
+  async function sendImage() {
+    if (!pendingImageFile || !currentUserId) return;
+    const btn = document.getElementById('btn-send');
+    btn.disabled = true;
+    const originalHTML = btn.innerHTML;
+    btn.textContent = '...';
+
+    const formData = new FormData();
+    formData.append('image', pendingImageFile);
+
+    try {
+      // Using fetch directly because api() wrapper sends JSON
+      const res = await fetch(`/reader/api/chats/${currentUserId}/send-image`, {
+        method: 'POST',
+        headers: { 'Authorization': authToken },
+        body: formData
+      });
+      if (res.status === 401) { logout(); throw new Error('Session expired'); }
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      
+      cancelImageUpload();
+      await refreshChat();
+    } catch(err) {
+      alert('ส่งรูปภาพไม่สำเร็จ: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalHTML;
     }
   }
 
   // Send Message
   async function sendMessage() {
     if (!isCurrentLive || !currentUserId) return;
+
+    if (pendingImageFile) {
+      await sendImage();
+      return;
+    }
+
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
     if (!text) return;
@@ -446,6 +657,7 @@
     input.disabled = true;
     const btn = document.getElementById('btn-send');
     btn.disabled = true;
+    const originalHTML = btn.innerHTML;
     btn.textContent = '...';
 
     try {
@@ -457,7 +669,7 @@
     } finally {
       input.disabled = false;
       btn.disabled = false;
-      btn.textContent = 'ส่ง';
+      btn.innerHTML = originalHTML;
       input.focus();
     }
   }
@@ -546,17 +758,35 @@
     if (!currentUserId) return;
     if (!confirm('ยืนยันจบการสนทนาสำหรับลูกค้ารายนี้?\n(ระบบจะเอาลูกค้าออกจากคิว, ปิดสถานะจอง, และส่งข้อความให้คะแนนลูกค้า)')) return;
     
+    const completedUserId = currentUserId;
     try {
-      await api('POST', `/api/chats/${currentUserId}/complete`);
+      await api('POST', `/api/chats/${completedUserId}/complete`);
       
-      // Clear UI without alert to feel realtime
+      // Clear chat UI
       currentUserId = null;
       document.getElementById('chat-interface').style.display = 'none';
       document.getElementById('tools-sidebar').style.display = 'none';
       document.getElementById('empty-state').style.display = 'flex';
       if (pollingInterval) clearInterval(pollingInterval);
       
-      loadUsers();
+      // ลบ user ออกจาก sidebar ทันที (ไม่ต้องรอ DB)
+      const userItem = document.querySelector(`.user-item[data-userid="${completedUserId}"]`);
+      if (userItem) {
+        userItem.style.transition = 'opacity 0.3s, transform 0.3s, max-height 0.3s';
+        userItem.style.opacity = '0';
+        userItem.style.transform = 'translateX(-20px)';
+        userItem.style.overflow = 'hidden';
+        userItem.style.maxHeight = userItem.offsetHeight + 'px';
+        setTimeout(() => {
+          userItem.style.maxHeight = '0';
+          userItem.style.padding = '0';
+          userItem.style.margin = '0';
+          setTimeout(() => userItem.remove(), 300);
+        }, 200);
+      }
+      
+      // Sync กับ server เป็น background
+      await loadUsers();
     } catch(err) {
       alert('เกิดข้อผิดพลาด: ' + err.message);
     }
@@ -659,6 +889,11 @@
       const btn = document.getElementById('btn-notif');
       if (btn) { btn.textContent = '✅ เปิดแล้ว'; btn.style.background = '#065f46'; btn.style.color = '#6ee7b7'; }
     }
+
+    // Connection monitoring events
+    window.addEventListener('online', () => updateConnectionStatus(true));
+    window.addEventListener('offline', () => updateConnectionStatus(false));
+    if (!navigator.onLine) updateConnectionStatus(false);
   }
 
   // Check auth on load

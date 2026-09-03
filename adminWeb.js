@@ -341,7 +341,34 @@ router.get('/api/revenue-chart', async (req, res) => {
 });
 
 // Settings
-const FLEX_SETTING_KEYS = ['flex_booking', 'flex_payment_menu', 'flex_payment_success', 'flex_rating', 'flex_profile', 'flex_profile_vip', 'flex_ad'];
+const CORE_FLEX_REGISTRY = [
+  { key: 'flex_booking', label: '📅 การจองคิว' },
+  { key: 'flex_payment_menu', label: '💳 เมนูชำระเงิน' },
+  { key: 'flex_payment_success', label: '✅ ชำระเงินสำเร็จ' },
+  { key: 'flex_rating', label: '⭐ ขอคะแนน AI' },
+  { key: 'flex_reader_rating', label: '🔮 ขอคะแนนหมอดู' },
+  { key: 'flex_profile', label: '👤 โปรไฟล์ผู้ใช้' },
+  { key: 'flex_profile_vip', label: '👑 โปรไฟล์ VIP' },
+  { key: 'flex_ad', label: '🎯 โฆษณา' }
+];
+
+router.get('/api/flex-templates', async (req, res) => {
+  try {
+    const rawSettings = await getAllSettings();
+    const dynamicKeys = Object.keys(rawSettings).filter(k => k.startsWith('flex_'));
+    
+    let templates = [...CORE_FLEX_REGISTRY];
+    const coreKeys = CORE_FLEX_REGISTRY.map(t => t.key);
+    
+    for (const dk of dynamicKeys) {
+      if (!coreKeys.includes(dk)) {
+        templates.push({ key: dk, label: `🔧 ${dk} (Custom)` });
+      }
+    }
+    
+    res.json(templates);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 
 function cleanFlexJson(str) {
   if (!str || !str.trim()) return '';
@@ -367,8 +394,8 @@ router.get('/api/settings', async (req, res) => {
   try {
     const rawSettings = await getAllSettings();
     const settings = { ...rawSettings };
-    for (const key of FLEX_SETTING_KEYS) {
-      if (settings[key]) {
+    for (const key of Object.keys(settings)) {
+      if (key.startsWith('flex_')) {
         settings[key] = cleanFlexJson(settings[key]);
       }
     }
@@ -378,14 +405,13 @@ router.get('/api/settings', async (req, res) => {
 
 router.post('/api/settings', express.json(), async (req, res) => {
   try {
-    const ALLOWED_KEYS = [
-      'credit_price', 'subscription_price', 'welcome_message', 'stripe_enabled', 'rate_limit', 'vip_days',
-      ...FLEX_SETTING_KEYS
+    const ALLOWED_CORE_KEYS = [
+      'credit_price', 'subscription_price', 'welcome_message', 'stripe_enabled', 'rate_limit', 'vip_days'
     ];
     for (const [key, value] of Object.entries(req.body)) {
-      if (ALLOWED_KEYS.includes(key)) {
+      if (ALLOWED_CORE_KEYS.includes(key) || key.startsWith('flex_')) {
         let v = value;
-        if (FLEX_SETTING_KEYS.includes(key)) {
+        if (key.startsWith('flex_')) {
           v = cleanFlexJson(value);
         }
         await setSetting(key, v);

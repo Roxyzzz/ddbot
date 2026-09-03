@@ -55,13 +55,22 @@ async function initDB() {
     await pool.execute('ALTER TABLE bookings ADD COLUMN reader_id INT NULL AFTER user_id');
   } catch (e) {}
 
+  try {
+    await pool.execute('ALTER TABLE bookings ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+  } catch (e) {}
+
   await pool.execute(`CREATE TABLE IF NOT EXISTS readers (
     id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL, name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`);
+  await pool.execute(`CREATE TABLE IF NOT EXISTS reader_ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY, reader_id INT NOT NULL,
+    user_id VARCHAR(100), rating INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`);
   await pool.execute(`CREATE TABLE IF NOT EXISTS settings (
-    \`key\` VARCHAR(100) PRIMARY KEY, value VARCHAR(2000) NOT NULL,
+    \`key\` VARCHAR(100) PRIMARY KEY, value MEDIUMTEXT NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   )`);
   await pool.execute(`CREATE TABLE IF NOT EXISTS ai_training_data (
@@ -323,12 +332,14 @@ async function getRecentChatUsers(readerId = null, limit = 30) {
   if (readerId) {
     const [rows] = await pool.execute(`SELECT u.user_id, u.assigned_reader_id, u.line_name, u.line_picture,
       (SELECT MAX(created_at) FROM chat_logs WHERE user_id = u.user_id) as last_active,
-      (SELECT message FROM chat_logs WHERE user_id = u.user_id ORDER BY created_at DESC LIMIT 1) as message
+      (SELECT message FROM chat_logs WHERE user_id = u.user_id ORDER BY created_at DESC LIMIT 1) as message,
+      (SELECT COUNT(*) FROM chat_logs WHERE user_id = u.user_id AND message != '') as message_count
       FROM users u
       WHERE u.assigned_reader_id = ? ORDER BY last_active DESC LIMIT ?`, [readerId, limit]);
     return rows;
   }
-  const [rows] = await pool.execute(`SELECT c.user_id, MAX(c.created_at) as last_active, ANY_VALUE(c.message) as message, ANY_VALUE(c.response) as response, ANY_VALUE(u.assigned_reader_id) as assigned_reader_id, ANY_VALUE(u.line_name) as line_name, ANY_VALUE(u.line_picture) as line_picture
+  const [rows] = await pool.execute(`SELECT c.user_id, MAX(c.created_at) as last_active, ANY_VALUE(c.message) as message, ANY_VALUE(c.response) as response, ANY_VALUE(u.assigned_reader_id) as assigned_reader_id, ANY_VALUE(u.line_name) as line_name, ANY_VALUE(u.line_picture) as line_picture,
+    (SELECT COUNT(*) FROM chat_logs WHERE user_id = c.user_id AND message != '') as message_count
     FROM chat_logs c LEFT JOIN users u ON c.user_id = u.user_id
     GROUP BY c.user_id ORDER BY last_active DESC LIMIT ?`, [limit]);
   return rows;
@@ -386,7 +397,9 @@ async function getReaders() {
   const [rows] = await pool.execute(`
     SELECT r.id, r.username, r.name, r.created_at,
       (SELECT COUNT(DISTINCT b.user_id) FROM bookings b WHERE b.reader_id = r.id AND b.status = 'completed') as completed_clients,
-      (SELECT COUNT(*) FROM bookings b WHERE b.reader_id = r.id AND b.status = 'completed') as completed_readings
+      (SELECT COUNT(*) FROM bookings b WHERE b.reader_id = r.id AND b.status = 'completed') as completed_readings,
+      (SELECT ROUND(AVG(rating), 1) FROM reader_ratings rr WHERE rr.reader_id = r.id) as avg_rating,
+      (SELECT COUNT(*) FROM reader_ratings rr WHERE rr.reader_id = r.id) as rating_count
     FROM readers r ORDER BY r.created_at DESC
   `);
   return rows;
@@ -396,6 +409,10 @@ async function verifyReader(username, password) {
   if (!reader) return null;
   if (reader.password === password) return { id: reader.id, username: reader.username, name: reader.name };
   return null;
+}
+
+async function addReaderRating(readerId, userId, rating) {
+  await pool.execute('INSERT INTO reader_ratings (reader_id, user_id, rating) VALUES (?, ?, ?)', [readerId, userId, rating]);
 }
 async function assignReaderToUser(userId, readerId) {
   const [[hasUser]] = await pool.execute('SELECT 1 FROM users WHERE user_id = ?', [userId]);
@@ -487,6 +504,24 @@ async function getAITrainingData(limit = 100) {
   return rows;
 }
 
+// AI Context Helpers
+async function getRecentPredictions(userId, limit = 3) {
+  const [rows] = await pool.execute(
+    `SELECT topic, cards, response, created_at FROM ai_training_data WHERE user_id = ? ORDER BY created_at DESC LIMIT ?`,
+    [userId, limit]
+  );
+  return rows;
+}
+async function getUserReadingPreference(userId) {
+  const [rows] = await pool.execute(
+    `SELECT AVG(rating) as avg_rating, COUNT(*) as total,
+      GROUP_CONCAT(CASE WHEN rating >= 4 THEN topic END SEPARATOR ', ') as liked_topics,
+      GROUP_CONCAT(CASE WHEN rating <= 2 THEN topic END SEPARATOR ', ') as disliked_topics
+     FROM ai_training_data WHERE user_id = ? AND rating > 0`, [userId]
+  );
+  return rows[0] || { avg_rating: 0, total: 0, liked_topics: null, disliked_topics: null };
+}
+
 // Cron helpers
 async function getExpiringVIPs(days) {
   const [rows] = await pool.execute(`SELECT user_id, line_name, subscription_expires_at FROM users
@@ -550,7 +585,7 @@ module.exports = {
   createReader, getReaders, verifyReader, assignReaderToUser, getUsersByReader,
   ensureUserExists, updateLineProfile, getRevenueStats,
   getSetting, setSetting, isStripeEnabled, getAllSettings,
-  saveAITrainingData, updateAIRating, getAITrainingData,
+  saveAITrainingData, updateAIRating, getAITrainingData, getRecentPredictions, getUserReadingPreference, addReaderRating,
   getExpiringVIPs, getOldPendingSlips, deletePendingSlips,
   getUserMemo, updateUserMemo, completeUserBookings,
   getReaderHistory, getBookingSystemCustomers,
